@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Coucou</title>
+    <link rel="stylesheet" href="/src/island.css" />
+  </head>
+  <body>
+    <!--
+      The island is a single rounded-black pill pinned to the top edge of the
+      screen. The window itself is transparent and click-through outside the
+      pill (the Rust side sets the input region).
+    -->
+    <main id="island" aria-label="Coucou">
+      <canvas id="mochi" width="240" height="36" aria-hidden="true"></canvas>
+      <div id="pills" role="list"></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

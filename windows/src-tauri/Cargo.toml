@@ -1,0 +1,28 @@
+[package]
+name = "coucou"
+description = "Coucou — Mochi lives at the top of your screen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "coucou_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+tokio = { version = "1", features = ["net", "io-util", "sync", "time", "rt-multi-thread", "macros"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# gtk-layer-shell for the top-edge overlay on Wayland compositors that honour
+# wlr-layer-shell (COSMIC, KDE, Hyprland, Sway). GNOME is handled by the Rust
+# code falling back to a plain top-dock window when layer-shell isn't there.
+gtk = "0.18"
+gtk-layer-shell = "0.8"
+libc = "0.2"

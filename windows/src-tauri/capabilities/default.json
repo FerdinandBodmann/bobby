@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions the island window needs. Nothing more than core.",
+  "windows": ["island"],
+  "permissions": ["core:default"]
+}

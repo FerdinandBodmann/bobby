@@ -1,0 +1,92 @@
+/* The island mimics the MacBook notch on screens that don't have one: a black
+   pill flush with the top edge, growing downwards when pills are active.
+   Everything outside the pill stays fully transparent so the compositor keeps
+   the rest of the screen clickable. */
+:root {
+  color-scheme: dark;
+  --island-bg: #000;
+  --island-fg: #fff;
+  --island-radius: 18px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--island-fg);
+}
+
+#island {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 180px;
+  padding: 2px 14px 4px;
+  background: var(--island-bg);
+  border-bottom-left-radius: var(--island-radius);
+  border-bottom-right-radius: var(--island-radius);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: min-width 180ms ease, padding 180ms ease;
+}
+
+#island.expanded {
+  min-width: 420px;
+  padding: 6px 18px 10px;
+}
+
+#mochi {
+  display: block;
+  width: 48px;
+  height: 24px;
+}
+
+#pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: background 120ms ease;
+}
+
+.pill[data-kind="approve"] {
+  background: rgba(80, 200, 120, 0.18);
+}
+.pill[data-kind="deny"] {
+  background: rgba(240, 90, 90, 0.18);
+}
+
+.pill button {
+  all: unset;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 6px;
+}
+.pill button:focus-visible {
+  outline: 1px solid var(--island-fg);
+}
+.pill button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Coucou",
+  "version": "0.1.0",
+  "identifier": "fr.louisraille.coucou",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ipc: http://ipc.localhost ws://localhost:1420 http://localhost:1420"
+    },
+    "windows": [
+      {
+        "label": "island",
+        "title": "Coucou",
+        "url": "index.html",
+        "width": 480,
+        "height": 48,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "visible": true,
+        "center": false,
+        "maximizable": false,
+        "minimizable": false,
+        "closable": false,
+        "dragDropEnabled": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": false,
+    "targets": [],
+    "icon": [],
+    "category": "DeveloperTool",
+    "shortDescription": "Mochi lives at the top of your screen",
+    "longDescription": "Coucou puts Mochi at the top of your screen: it shows your AI coding-agent sessions and lets you approve, answer and chat without leaving what you are doing."
+  }
+}
