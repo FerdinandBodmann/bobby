@@ -73,6 +73,21 @@ app.on("before-quit", () => {
 
 /* ---------------- windows ---------------- */
 
+function watchWindow(w, name) {
+  w.on("closed", () => console.log(`[win] ${name} closed`));
+  w.webContents.on("render-process-gone", (_e, details) =>
+    console.error(`[win] ${name} renderer gone:`, JSON.stringify(details))
+  );
+  w.on("unresponsive", () => console.warn(`[win] ${name} unresponsive`));
+}
+
+if (process.env.BOBBY_DEBUG) {
+  setInterval(() => {
+    const list = BrowserWindow.getAllWindows().map((w) => `${w.id}:${w.getTitle() || "?"}:${w.isDestroyed() ? "dead" : "alive"}`);
+    console.log("[win] open:", list.join(" | "));
+  }, 3000);
+}
+
 function openChat() {
   if (!chatWin || chatWin.isDestroyed()) createChatWindow();
   if (!chatWin.isVisible()) chatWin.show();
@@ -103,6 +118,7 @@ function createChatWindow() {
     },
   });
   chatWin.loadFile(path.join(__dirname, "renderer", "chat", "index.html"));
+  watchWindow(chatWin, "chat");
   chatWin.once("ready-to-show", () => {
     chatWin.show();
     pushStatus();
@@ -159,6 +175,7 @@ function openSettings() {
     },
   });
   settingsWin.loadFile(path.join(__dirname, "renderer", "settings", "index.html"));
+  watchWindow(settingsWin, "settings");
   settingsWin.once("ready-to-show", () => settingsWin.show());
   settingsWin.on("closed", () => (settingsWin = null));
 }
@@ -525,8 +542,7 @@ function wireIpc() {
     }
   });
 
-  ipcMain.handle("audit:get", () => cfgmod.readAudit(150));
-  ipcMain.handle("audit:path", () => cfgmod.file("audit.log"));
+  ipcMain.handle("audit:get", () => cfgmod.readAudit(150));  ipcMain.handle("audit:path", () => cfgmod.file("audit.log"));
   ipcMain.handle("settings:openAudit", () => {
     require("electron").shell.showItemInFolder(cfgmod.file("audit.log"));
     return true;
@@ -546,4 +562,21 @@ function wireIpc() {
     });
     return res.canceled ? null : res.filePaths[0] || null;
   });
+
+  if (process.env.BOBBY_DEBUG) {
+    ipcMain.handle("dev:runTool", (_e, { name, args }) =>
+      permissions.execute(name, args || {}, permissions.createAsker(sendConsentRequest))
+    );
+    ipcMain.handle("dev:setTools", (_e, v) => {
+      cfgmod.update({ toolsEnabled: !!v });
+      pushStatus();
+      refreshTrayMenu();
+      return cfgmod.get().toolsEnabled;
+    });
+    ipcMain.handle("dev:info", () => ({
+      userData: cfgmod.dir(),
+      config: cfgmod.file("config.json"),
+      notes: cfgmod.notesPath(),
+    }));
+  }
 }
