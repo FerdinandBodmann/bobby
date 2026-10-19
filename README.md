@@ -1,23 +1,4 @@
-# bobby — how I understood this project
-
-Hi! This is my read of what you asked for, written down so you can correct me before any code
-exists. `PROMPT.md` is the actual build brief — this file is the "why" behind it.
-
-## Your words → what I made of them
-
-| You said | What I understood |
-|---|---|
-| *"a little 'notch buddy'"* | A tiny companion widget that lives in the notch area of a laptop screen — the little black cutout that's otherwise dead space. |
-| *"basically a customizable little ball"* | The buddy is a **ball**, not a character sprite or a cat. Round, squashy, and its look (color, size, accessories, name) is user-configurable. |
-| *"lives in the top of my screen (or customizable where it actually is)"* | Default = top-center against the notch, but placement is free: drag it, snap it to edges/corners, save named positions, keep it on the right monitor. |
-| *"link it to my ai api key"* | Bring-your-own-key. You pick the provider (OpenAI / Anthropic / local model / any compatible endpoint), paste the key, it lives in the OS keychain. |
-| *"have it do stuff on my device"* | This is the big one: the LLM gets **tool access** — files, shell commands, system controls, opening apps, screenshots. Not just chat. |
-| *"have internet access"* | It can fetch URLs and search the web on request. |
-| *"and top priotory"* | I read this two ways: **(a)** the window is always-on-top, and **(b)** this project is a top priority for you — quick to start, no fuss. I wrote (a) into the prompt as a feature; (b) is why there's no scaffolding debate, just the brief. |
-| *"it should be cute :sob:"* | The single hardest requirement. Expressions, blinking, squash-and-stretch, poke reactions, a name. If it's ugly, the project failed. |
-| *"make the prompt in PROMPT.md"* | You wanted a hand-off document — something you can throw at a coding agent (me or another) and get the thing built. |
-| *"README.md where you explain the project from your view"* | You want to check my understanding first. So: here's my model, here are my assumptions, tell me where I'm wrong. |
-
+# bobby
 ## My mental model: four parts
 
 ```
