@@ -36,7 +36,9 @@ pub fn pin_top(win: &WebviewWindow) {
     gtk_win.set_anchor(Edge::Top, true);
     // No left/right anchor so the compositor centres the window at its
     // natural width; we still ask for no margins so the top edge is flush.
-    gtk_win.set_margin(Edge::Top, 0);
+    // The method is fully qualified because GTK itself exposes a one-arg
+    // `set_margin` on every widget, which would otherwise win name lookup.
+    LayerShell::set_margin(&gtk_win, Edge::Top, 0);
     gtk_win.set_exclusive_zone(0);
     // The island never wants keyboard focus (it would steal the terminal's
     // focus every time a pill shows up); clicks still land because we leave

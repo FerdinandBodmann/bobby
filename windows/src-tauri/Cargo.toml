@@ -24,5 +24,5 @@ tokio = { version = "1", features = ["net", "io-util", "sync", "time", "rt-multi
 # wlr-layer-shell (COSMIC, KDE, Hyprland, Sway). GNOME is handled by the Rust
 # code falling back to a plain top-dock window when layer-shell isn't there.
 gtk = "0.18"
-gtk-layer-shell = "0.8"
+gtk-layer-shell = { version = "0.8", features = ["v0_5"] }
 libc = "0.2"

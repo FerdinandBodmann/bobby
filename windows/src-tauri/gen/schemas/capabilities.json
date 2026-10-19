@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Permissions the island window needs. Nothing more than core.","local":true,"windows":["island"],"permissions":["core:default"]}}
