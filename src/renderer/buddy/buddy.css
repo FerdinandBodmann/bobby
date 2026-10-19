@@ -1,0 +1,403 @@
+/* ---------- the buddy ---------- */
+
+:root {
+  --ink: #1e2a44;
+  --ball-color: #6ee7c8;
+  --ball-light: #b8f5e6;
+  --ball-dark: #35ab8f;
+  --scale: 1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body { -webkit-app-region: no-drag; }
+
+#stage {
+  position: relative;
+  width: 200px;
+  height: 190px;
+  transform-origin: top center;
+  transform: scale(var(--scale));
+}
+
+/* ---------- sprout (drag handle) ---------- */
+
+.dragger {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 70px;
+  height: 46px;
+  transform: translateX(-50%);
+  z-index: 6;
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+.dragger:active { cursor: grabbing; }
+
+.stalk {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  width: 9px;
+  height: 26px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #74d8a9, #3ba97b);
+  box-shadow: inset -2px 0 2px rgba(0, 0, 0, 0.18), inset 2px 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.leaf {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 36px;
+  height: 18px;
+  border-radius: 60% 60% 45% 55% / 65% 65% 35% 35%;
+  background: linear-gradient(135deg, #83e2b7, #33a374);
+  transform: translateX(3px) rotate(-26deg);
+  transform-origin: -10% 70%;
+  box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.16), inset 0 3px 4px rgba(255, 255, 255, 0.25);
+  transition: transform 0.25s ease;
+}
+.dragger:hover .leaf { transform: translateX(3px) rotate(-19deg) translateY(-1px); }
+
+.leaf-shine {
+  position: absolute;
+  left: 30px;
+  top: 10px;
+  width: 12px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  transform: rotate(-30deg);
+  filter: blur(0.5px);
+}
+
+/* ---------- shadow ---------- */
+
+.shadow {
+  position: absolute;
+  left: 48px;
+  top: 158px;
+  width: 104px;
+  height: 17px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0) 70%);
+  filter: blur(3px);
+  z-index: 1;
+}
+
+/* ---------- ball ---------- */
+
+.ball {
+  position: absolute;
+  left: 33px;
+  top: 26px;
+  width: 134px;
+  height: 134px;
+  border-radius: 50%;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.85) 0 4%, rgba(255, 255, 255, 0.3) 10%, transparent 27%),
+    radial-gradient(circle at 36% 30%, var(--ball-light) 0%, var(--ball-color) 46%, var(--ball-dark) 100%);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.28),
+    inset -9px -12px 22px rgba(0, 0, 0, 0.18),
+    inset 6px 8px 16px rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  will-change: transform;
+  transition: filter 0.2s ease;
+}
+.ball:hover { filter: brightness(1.04) saturate(1.05); }
+
+.rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset -4px -6px 14px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+
+.gloss {
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  width: 44px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 40%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%);
+  transform: rotate(-24deg);
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+/* ---------- face ---------- */
+
+.eyes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 35px;
+  z-index: 3;
+  transform: translate(var(--ex, 0px), var(--ey, 0px));
+  transition: transform 0.12s ease-out;
+  pointer-events: none;
+}
+
+.eye {
+  position: relative;
+  width: 33px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ink);
+  overflow: hidden;
+  box-shadow: inset 0 -7px 12px rgba(0, 0, 0, 0.35);
+  transform-origin: center;
+  transition: transform 0.07s ease;
+}
+
+.eye .g1 {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  opacity: 0.95;
+}
+.eye .g2 {
+  position: absolute;
+  bottom: 8px;
+  left: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.mouth {
+  position: absolute;
+  left: 50%;
+  top: 95px;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 16px;
+  border: 3.5px solid var(--ink);
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-radius: 0 0 46px 46px / 0 0 30px 30px;
+  z-index: 3;
+  pointer-events: none;
+  transition: width 0.15s ease, height 0.15s ease, border-radius 0.15s ease;
+}
+
+.blush {
+  position: absolute;
+  top: 84px;
+  width: 26px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 116, 146, 0.55);
+  filter: blur(2px);
+  opacity: 0.75;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.blush.left { left: 15px; }
+.blush.right { right: 15px; }
+
+.sparkle {
+  position: absolute;
+  top: -12px;
+  right: 4px;
+  font-size: 17px;
+  color: #ffe27a;
+  text-shadow: 0 0 8px rgba(255, 226, 122, 0.9);
+  opacity: 0;
+  z-index: 4;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.sparkle.two {
+  left: 0;
+  right: auto;
+  top: 4px;
+  font-size: 11px;
+  color: #fff3b8;
+}
+
+.zzz {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  display: flex;
+  gap: 1px;
+  color: #a9bcdf;
+  font-weight: 800;
+  opacity: 0;
+  z-index: 4;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.zzz span {
+  display: inline-block;
+  font-size: 13px;
+  animation: floatZ 2.6s ease-in-out infinite;
+}
+.zzz span:nth-child(2) { font-size: 10px; animation-delay: 0.35s; }
+.zzz span:nth-child(3) { font-size: 8px; animation-delay: 0.7s; }
+
+@keyframes floatZ {
+  0% { transform: translate(0, 0) rotate(-8deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(10px, -20px) rotate(10deg); opacity: 0; }
+}
+
+/* ---------- moods ---------- */
+
+#stage[data-mood="idle"] .ball { animation: bob 3.6s ease-in-out infinite; }
+#stage[data-mood="idle"] .shadow { animation: bobShadow 3.6s ease-in-out infinite; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes bobShadow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.88); opacity: 0.7; }
+}
+
+/* thinking */
+#stage[data-mood="thinking"] .ball { animation: thinkPulse 0.95s ease-in-out infinite; }
+#stage[data-mood="thinking"] .sparkle { opacity: 1; }
+#stage[data-mood="thinking"] .sparkle:not(.two) { animation: sparkleSpin 2.4s linear infinite; }
+#stage[data-mood="thinking"] .sparkle.two { animation: sparkleSpin 3.1s linear infinite reverse; }
+#stage[data-mood="thinking"] .eyes { transform: translate(3px, -4px); }
+#stage[data-mood="thinking"] .mouth {
+  width: 11px;
+  height: 12px;
+  border: 3.5px solid var(--ink);
+  border-radius: 50%;
+}
+
+@keyframes thinkPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+@keyframes sparkleSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.25); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* talking */
+#stage[data-mood="talking"] .ball { animation: talkJiggle 0.24s ease-in-out infinite alternate; }
+#stage[data-mood="talking"] .mouth {
+  top: 94px;
+  width: 20px;
+  border: none;
+  background: var(--ink);
+  border-radius: 38% 38% 50% 50%;
+  animation: mouthTalk 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes talkJiggle {
+  from { transform: translateY(0) rotate(-1deg); }
+  to { transform: translateY(-2.5px) rotate(1deg); }
+}
+@keyframes mouthTalk {
+  from { height: 6px; }
+  to { height: 17px; }
+}
+
+/* happy */
+#stage[data-mood="happy"] .ball { animation: happyBounce 0.72s ease-in-out 2; }
+#stage[data-mood="happy"] .shadow { animation: bobShadow 0.72s ease-in-out 2; }
+#stage[data-mood="happy"] .mouth {
+  width: 38px;
+  height: 20px;
+  border-radius: 0 0 50px 50px / 0 0 34px 34px;
+}
+#stage[data-mood="happy"] .blush { opacity: 1; }
+#stage[data-mood="happy"] .eyes { transform: translate(var(--ex, 0px), calc(var(--ey, 0px) + 1px)); }
+
+@keyframes happyBounce {
+  0% { transform: translateY(0) scale(1, 1); }
+  30% { transform: translateY(-18px) scale(1.04, 0.96); }
+  55% { transform: translateY(0) scale(0.94, 1.07); }
+  70% { transform: translateY(-7px) scale(1.02, 0.98); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* error */
+#stage[data-mood="error"] .ball { animation: shakeX 0.45s ease-in-out 2; }
+#stage[data-mood="error"] .mouth {
+  width: 26px;
+  height: 12px;
+  border: 3.5px solid var(--ink);
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-radius: 46px 46px 0 0 / 30px 30px 0 0;
+  top: 100px;
+}
+#stage[data-mood="error"] .blush { opacity: 0.25; }
+
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px) rotate(-1deg); }
+  40% { transform: translateX(4px) rotate(1deg); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+/* sleeping */
+#stage[data-mood="sleeping"] .ball { animation: breathe 4.2s ease-in-out infinite; }
+#stage[data-mood="sleeping"] .eye { transform: scaleY(0.1); border-radius: 40%; }
+#stage[data-mood="sleeping"] .eye .g1,
+#stage[data-mood="sleeping"] .eye .g2 { opacity: 0; }
+#stage[data-mood="sleeping"] .mouth {
+  width: 18px;
+  height: 8px;
+  border-width: 3px;
+}
+#stage[data-mood="sleeping"] .zzz { opacity: 1; }
+#stage[data-mood="sleeping"] .blush { opacity: 0.5; }
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.018, 0.975); }
+}
+
+/* blink */
+#stage.blink .eye { transform: scaleY(0.08); border-radius: 40%; }
+
+/* poke */
+#stage.poke .ball { animation: pokeSquash 0.45s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes pokeSquash {
+  0% { transform: scale(1, 1); }
+  35% { transform: scale(1.14, 0.84); }
+  65% { transform: scale(0.94, 1.06); }
+  100% { transform: scale(1, 1); }
+}
+
+/* looks */
+#stage.look-up .eyes { transform: translate(0, -5px); }
+#stage.look-down .eyes { transform: translate(0, 3px); }

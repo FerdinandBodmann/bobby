@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+    <title>Bobby settings</title>
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="titlebar drag">
+        <div class="logo"></div>
+        <div>
+          <div class="t">Bobby settings</div>
+          <div class="s">brain, hands and looks</div>
+        </div>
+        <div class="spacer"></div>
+        <button class="iconbtn no-drag" id="btnClose" title="Close">×</button>
+      </header>
+
+      <main class="scroll" id="scroll">
+        <section>
+          <h2>Brain</h2>
+          <p class="help">Bring your own key. The key is stored in the OS keychain, never in plain text.</p>
+
+          <label>Provider</label>
+          <select id="provider">
+            <option value="ollama">Ollama (local)</option>
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="custom">Custom (OpenAI-compatible)</option>
+          </select>
+
+          <div class="grid2">
+            <div>
+              <label>Base URL</label>
+              <input id="baseUrl" spellcheck="false" placeholder="http://localhost:11434/v1" />
+            </div>
+            <div>
+              <label>Model</label>
+              <div class="withbtn">
+                <input id="model" spellcheck="false" list="modelList" placeholder="model name" />
+                <button class="mini" id="btnModels" title="Ask the provider which models it has">list</button>
+              </div>
+              <datalist id="modelList"></datalist>
+            </div>
+          </div>
+
+          <label>API key <span class="tag" id="keyBackend"></span></label>
+          <div class="withbtn">
+            <input id="apiKey" type="password" spellcheck="false" placeholder="paste your key here" />
+            <button class="mini" id="btnClearKey" title="Remove the saved key">clear</button>
+          </div>
+
+          <div class="row">
+            <button id="btnTest">Test connection</button>
+            <span class="result" id="testResult"></span>
+          </div>
+        </section>
+
+        <section>
+          <h2>Personality</h2>
+          <label>Name</label>
+          <input id="name" maxlength="24" />
+          <label>Persona <span class="hint">(the buddy's default vibe)</span></label>
+          <textarea id="persona" rows="5" spellcheck="false"></textarea>
+        </section>
+
+        <section>
+          <h2>Look</h2>
+          <div class="grid3">
+            <div>
+              <label>Colour</label>
+              <input id="color" type="color" />
+            </div>
+            <div>
+              <label>Size <span class="hint" id="scaleVal">100%</span></label>
+              <input id="scale" type="range" min="0.75" max="1.5" step="0.05" />
+            </div>
+            <div>
+              <label>Sound</label>
+              <label class="check"><input type="checkbox" id="sounds" /> little blips</label>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Freedom</h2>
+          <label>Autonomy</label>
+          <select id="autonomy">
+            <option value="strict">Strict — ask me about everything</option>
+            <option value="balanced">Balanced — safe stuff auto, the rest asks (default)</option>
+            <option value="loose">Loose — auto unless it's destructive</option>
+          </select>
+
+          <label class="check"><input type="checkbox" id="webEnabled" /> Internet access (fetch pages, search the web)</label>
+          <label class="check"><input type="checkbox" id="toolsEnabled" /> Device tools <span class="hint">(kill switch — off means the buddy can only talk)</span></label>
+
+          <label>Approved folders</label>
+          <div class="chips" id="dirs"></div>
+          <div class="row">
+            <button class="mini" id="btnAddDir">Add folder…</button>
+          </div>
+
+          <label>Always-allowed command prefixes</label>
+          <div class="chips" id="cmds"></div>
+          <p class="help">These were saved when you clicked “Always allow” on a command.</p>
+        </section>
+
+        <section>
+          <h2>Placement &amp; startup</h2>
+          <div class="row">
+            <button id="btnResetPos">Reset buddy position</button>
+            <span class="result">drag the sprout on top of the ball to move it anywhere</span>
+          </div>
+          <label class="check"><input type="checkbox" id="autostart" /> Start with the system</label>
+        </section>
+
+        <section>
+          <h2>Data</h2>
+          <div class="row">
+            <button id="btnDataDir">Open data folder</button>
+            <button id="btnAudit">Show audit log</button>
+            <button class="danger" id="btnClearChat">Clear chat history</button>
+          </div>
+          <p class="help">Everything stays on this machine. No telemetry, no account.</p>
+        </section>
+
+        <section>
+          <h2>Recent actions</h2>
+          <div class="audit" id="audit"></div>
+        </section>
+      </main>
+
+      <footer>
+        <span id="saveState"></span>
+        <button class="primary" id="btnSave">Save</button>
+      </footer>
+    </div>
+    <script src="settings.js"></script>
+  </body>
+</html>

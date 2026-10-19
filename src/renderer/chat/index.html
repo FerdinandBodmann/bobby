@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+    <title>Bobby</title>
+    <link rel="stylesheet" href="chat.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="titlebar drag">
+        <div class="dot" id="dot"></div>
+        <div class="who">
+          <div class="name" id="name">Bobby</div>
+          <div class="sub" id="sub">connecting…</div>
+        </div>
+        <div class="spacer"></div>
+        <button class="iconbtn no-drag" id="btnTools" title="Toggle tools (kill switch)">✋</button>
+        <button class="iconbtn no-drag" id="btnSettings" title="Settings">⚙</button>
+        <button class="iconbtn no-drag" id="btnClose" title="Close">×</button>
+      </header>
+
+      <div class="banner" id="banner" hidden>
+        <span id="bannerText">Bobby needs a brain before it can think.</span>
+        <button class="mini" id="bannerBtn">Open settings</button>
+      </div>
+
+      <main class="messages" id="messages"></main>
+
+      <div class="statusline" id="statusline" hidden>
+        <span class="pulse"></span><span id="statusText">thinking…</span>
+      </div>
+
+      <footer class="composer">
+        <div class="inputrow">
+          <textarea id="input" rows="1" placeholder="say something to Bobby…" spellcheck="false"></textarea>
+          <button class="send" id="btnSend" title="Send (Enter)">↑</button>
+          <button class="send stop" id="btnStop" title="Stop" hidden>■</button>
+        </div>
+        <div class="hint"><span id="hintText">Enter to send · Shift+Enter for a new line</span></div>
+      </footer>
+    </div>
+    <script src="chat.js"></script>
+  </body>
+</html>
