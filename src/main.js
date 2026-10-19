@@ -8,7 +8,7 @@ const cfgmod = require("./config");
 const permissions = require("./permissions");
 const reminders = require("./reminders");
 const { Agent } = require("./agent");
-const { Overlay } = require("./overlay");
+const { Overlay, PEEK } = require("./overlay");
 
 app.commandLine.appendSwitch("enable-transparent-visuals");
 app.commandLine.appendSwitch("ozone-platform-hint", "auto");
@@ -516,9 +516,34 @@ function wireIpc() {
     const win = overlay.buddy;
     if (!win || win.isDestroyed()) return false;
     if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
+    // Dragging him off the top edge is how you un-park him.
+    if (overlay.peek.enabled && dy > 0 && !overlay.peek.dragging) overlay.undock();
     const [x, y] = win.getPosition();
     win.setPosition(Math.round(x + dx), Math.round(y + dy));
     return true;
+  });
+  ipcMain.handle("buddy:peek", (_e, { on } = {}) => {
+    overlay.setRevealed(!!on);
+    return { revealed: overlay.peek.revealed, enabled: overlay.peek.enabled };
+  });
+  ipcMain.handle("buddy:dockTop", () => {
+    overlay.dockToTop();
+    return { ok: true, mode: (cfgmod.get().placement||{}).mode };
+  });
+  ipcMain.handle("buddy:peekState", () => ({
+    enabled: overlay.peek.enabled,
+    revealed: overlay.peek.revealed,
+    y: overlay.buddy ? overlay.buddy.getBounds().y : null,
+    target: overlay.peek.enabled
+      ? overlay.revealY(overlay.peek.revealed ? PEEK.revealFull : PEEK.reveal)
+      : null,
+    visible: overlay.visible,
+  }));
+  ipcMain.handle("buddy:dragState", (_e, { dragging } = {}) => {
+    const was = overlay.peek.dragging;
+    overlay.peek.dragging = !!dragging;
+    if (was && !overlay.peek.dragging) overlay.onMoved();
+    return overlay.peek.dragging;
   });
   ipcMain.handle("buddy:contextMenu", () => {
     const cfg = cfgmod.get();
@@ -528,6 +553,12 @@ function wireIpc() {
       { type: "separator" },
       { label: "Tools enabled", type: "checkbox", checked: cfg.toolsEnabled, click: () => toggleTools() },
       { label: "Show buddy", type: "checkbox", checked: overlay.visible, click: () => overlay.toggleVisible() },
+      {
+        label: "Hide at the top of the screen",
+        type: "checkbox",
+        checked: cfg.placement?.mode === "top",
+        click: () => (cfg.placement?.mode === "top" ? overlay.undock() : overlay.dockToTop()),
+      },
       { label: "Reset position", click: () => overlay.resetPosition() },
       { type: "separator" },
       { label: "Quit", click: () => app.quit() },
@@ -555,7 +586,11 @@ function wireIpc() {
     }
     cfgmod.update(clean);
     if ("appearance" in clean) overlay.applyAppearance();
-    if ("placement" in clean) overlay.applyPosition();
+    if ("placement" in clean) {
+      overlay.refreshPeekMode();
+      overlay.applyPosition();
+      overlay.normalizePeek();
+    }
     if ("toolsEnabled" in clean || "webEnabled" in clean) pushStatus();
     if ("autostart" in clean) applyAutostart(clean.autostart);
     pushStatus();
@@ -653,5 +688,60 @@ function wireIpc() {
         overlay.consentWin.isVisible()
       ),
     }));
+    // Screenshot the buddy (or bubble/chat) for design review. `mood`, `scale`
+    // and `cosmetic` temporarily override appearance so one run can capture a
+    // whole contact sheet.
+    ipcMain.handle("dev:shot", async (_e, { path: out, target = "buddy", size = 2, mood, scale, cosmetic } = {}) => {
+      if (!out) throw new Error("dev:shot needs a path");
+      const fs = require("fs");
+      const os = require("os");
+      const dir = path.dirname(out);
+      fs.mkdirSync(dir, { recursive: true });
+
+      const applied = [];
+      let restoreAppearance = null;
+      if (target === "buddy" && (scale != null || cosmetic != null)) {
+        const cur = cfgmod.get().appearance;
+        restoreAppearance = structuredClone(cur);
+        const next = { ...cur };
+        if (scale != null) next.scale = scale;
+        if (cosmetic != null) next.cosmetic = cosmetic;
+        cfgmod.update({ appearance: next });
+        overlay.applyAppearance();
+        applied.push("appearance");
+      }
+      if (target === "buddy" && mood) {
+        overlay.setMood(mood);
+        applied.push("mood");
+      }
+      await new Promise((r) => setTimeout(r, 420));
+
+      const win =
+        target === "bubble"
+          ? overlay.bubbleWin
+          : target === "consent"
+            ? overlay.consentWin
+            : target === "chat"
+              ? chatWin
+              : overlay.buddy;
+      if (!win || win.isDestroyed()) throw new Error(`no ${target} window`);
+      if (!win.isVisible()) win.showInactive();
+      await new Promise((r) => setTimeout(r, 260));
+
+      const wc = win.webContents;
+      if (size && size !== 1) wc.setZoomFactor(size);
+      await new Promise((r) => setTimeout(r, 120));
+      const img = await wc.capturePage();
+      if (size && size !== 1) wc.setZoomFactor(1);
+      const png = img.toPNG();
+      fs.writeFileSync(out, png);
+
+      if (restoreAppearance) {
+        cfgmod.update({ appearance: restoreAppearance });
+        overlay.applyAppearance();
+      }
+      if (applied.includes("mood")) overlay.setMood("idle");
+      return { path: out, bytes: png.length, applied, screen: { w: img.getSize().width, h: img.getSize().height } };
+    });
   }
 }

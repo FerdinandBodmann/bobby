@@ -162,9 +162,12 @@ const DEFAULTS = {
     color: "#726FCF",
     scale: 1,
     sounds: true,
+    // A single cosmetic slot on the bean: id + position, understood by the
+    // renderer. Leave the id empty for a plain bean.
+    cosmetic: { id: "", cx: 0.5, cy: 0.8, scale: 1 },
   },
   placement: {
-    mode: "notch", // notch | custom
+    mode: "notch", // notch | custom | top
     displayId: null,
     x: null,
     y: null,

@@ -3,12 +3,13 @@
 const stage = document.getElementById("stage");
 const ball = document.getElementById("ball");
 const root = document.documentElement;
+const cosmeticEl = document.getElementById("cosmetic");
 
 const state = {
   mood: "idle",
   name: "Bobby",
   color: "#726FCF",
-  scale: 1,
+  cosmetic: null,
   sounds: true,
 };
 
@@ -127,6 +128,131 @@ function scheduleBlink() {
 }
 scheduleBlink();
 
+/* ---------------- geometry helpers (for tests) ---------------- */
+
+// Design-time geometry, in the stage's own unscaled 200x160 coordinate space.
+// `--scale` on #stage does the actual sizing, so nothing here is multiplied by
+// it — the bean, mouth and blush all scale together with the stage transform.
+const GEOMETRY = {
+  "--ball-w": 156,
+  "--ball-h": 110,
+  "--ball-radius": 46,
+  "--mouth-w": 26,
+  "--mouth-h": 13,
+  "--mouth-top": 68,
+  "--cheek-y": 64,
+  "--cheek-w": 23,
+  "--cheek-h": 10,
+  "--cheek-inset": 17,
+  "--shadow-w": 132,
+  "--shadow-h": 16,
+  "--shadow-top": 127,
+};
+
+function setGeometry() {
+  for (const [k, v] of Object.entries(GEOMETRY)) root.style.setProperty(k, v + "px");
+}
+
+// what the tests ask about: the bean's real box, in CSS px, at the current scale
+window.buddyInfo = function buddyInfo() {
+  const b = ball.getBoundingClientRect();
+  const m = document.getElementById("mouth").getBoundingClientRect();
+  const e = [...document.querySelectorAll(".eye")].map((n) => n.getBoundingClientRect());
+  return {
+    ball: { left: Math.round(b.left), top: Math.round(b.top), w: Math.round(b.width), h: Math.round(b.height) },
+    mouth: { top: Math.round(m.top), bottom: Math.round(m.bottom), w: Math.round(m.width), h: Math.round(m.height) },
+    eyes: e.map((r) => ({ left: Math.round(r.left), top: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) })),
+    cosmetic: (() => {
+      const c = cosmeticEl.getBoundingClientRect();
+      return { on: cosmeticEl.classList.contains("on"), w: Math.round(c.width), h: Math.round(c.height), x: Math.round(c.x), y: Math.round(c.y) };
+    })(),
+    mood: state.mood,
+    scale: state.scale,
+  };
+};
+
+/* ---------------- cosmetics ----------------
+   One little decoration worn on the bean. Each entry is plain SVG so it stays
+   crisp at any size, and `size` is a fraction of the bean's height. */
+
+const COSMETICS = {
+  none: null,
+  bow: {
+    size: 0.30,
+    svg:
+      '<svg viewBox="0 0 56 34" fill="none">' +
+      '<path d="M27 17 L6 5 C0 14 0 22 6 29 Z" fill="#e57aa6" stroke="#a8406a" stroke-width="2.4" stroke-linejoin="round"/>' +
+      '<path d="M29 17 L50 5 C56 14 56 22 50 29 Z" fill="#e57aa6" stroke="#a8406a" stroke-width="2.4" stroke-linejoin="round"/>' +
+      '<circle cx="28" cy="17" r="6.4" fill="#f7a8c6" stroke="#a8406a" stroke-width="2.4"/>' +
+      "</svg>",
+  },
+  party: {
+    size: 0.44,
+    svg:
+      '<svg viewBox="0 0 40 52" fill="none">' +
+      '<path d="M20 6 L2 48 L38 48 Z" fill="#7f7bdc" stroke="#4c47ea" stroke-width="3" stroke-linejoin="round"/>' +
+      '<path d="M20 6 L11 27 L29 27 Z" fill="#b9b6ff" opacity="0.9"/>' +
+      '<circle cx="20" cy="3.4" r="3.4" fill="#ffd76a"/>' +
+      "</svg>",
+  },
+  cap: {
+    size: 0.42,
+    svg:
+      '<svg viewBox="0 0 60 34" fill="none">' +
+      '<path d="M4 30 C4 14 15 4 30 4 C45 4 56 14 56 30 Z" fill="#3b4a86" stroke="#22305f" stroke-width="2.6" stroke-linejoin="round"/>' +
+      '<path d="M54 28 C66 28 66 34 54 34 Z" fill="#22305f"/>' +
+      '<circle cx="30" cy="6" r="3" fill="#e7e9ff"/>' +
+      "</svg>",
+  },
+  flower: {
+    size: 0.28,
+    svg:
+      '<svg viewBox="0 0 40 40" fill="none">' +
+      '<g fill="#f3a2c4" stroke="#c46a92" stroke-width="2">' +
+      '<circle cx="20" cy="8" r="7"/><circle cx="32" cy="20" r="7"/>' +
+      '<circle cx="20" cy="32" r="7"/><circle cx="8" cy="20" r="7"/>' +
+      "</g>" +
+      '<circle cx="20" cy="20" r="6" fill="#ffd76a" stroke="#d09b2c" stroke-width="2"/>' +
+      "</svg>",
+  },
+  boba: {
+    size: 0.26,
+    svg:
+      '<svg viewBox="0 0 34 46" fill="none">' +
+      '<path d="M6 12 L28 12 L24 44 L10 44 Z" fill="#efe3cf" stroke="#7a6a55" stroke-width="2.4" stroke-linejoin="round"/>' +
+      '<path d="M8 26 L26 26 L24 44 L10 44 Z" fill="#b98a5e"/>' +
+      '<circle cx="14" cy="34" r="2.6" fill="#3a2a1e"/><circle cx="21" cy="37" r="2.6" fill="#3a2a1e"/>' +
+      '<circle cx="17" cy="30" r="2.2" fill="#3a2a1e"/>' +
+      '<rect x="18" y="0" width="3" height="14" rx="1.5" fill="#7a6a55" transform="rotate(9 19 7)"/>' +
+      "</svg>",
+  },
+  star: {
+    size: 0.30,
+    svg:
+      '<svg viewBox="0 0 40 40" fill="none">' +
+      '<path d="M20 3 L25 15 L38 16 L28 25 L31 38 L20 31 L9 38 L12 25 L2 16 L15 15 Z" fill="#ffd76a" stroke="#d09b2c" stroke-width="2.4" stroke-linejoin="round"/>' +
+      "</svg>",
+  },
+};
+
+function paintCosmetic() {
+  const c = state.cosmetic || {};
+  const def = COSMETICS[c.id];
+  if (!def) {
+    cosmeticEl.classList.remove("on");
+    cosmeticEl.innerHTML = "";
+    return;
+  }
+  // Unscaled stage coordinates; #stage's transform scales this along with the bean.
+  const px = Math.round(110 * def.size * (Number(c.scale) || 1));
+  cosmeticEl.style.width = px + "px";
+  cosmeticEl.style.height = px + "px";
+  cosmeticEl.style.left = Math.round(156 * (c.cx ?? 0.5)) + "px";
+  cosmeticEl.style.top = Math.round(110 * (c.cy ?? 0.8)) + "px";
+  cosmeticEl.innerHTML = def.svg;
+  cosmeticEl.classList.add("on");
+}
+
 /* ---------------- sounds ---------------- */
 
 let audio = null;
@@ -192,9 +318,9 @@ ball.addEventListener("pointerdown", (e) => {
 ball.addEventListener("pointermove", (e) => {
   const d = dragState;
   if (!d || e.pointerId !== d.id) return;
-  if (!d.moved && Math.hypot(e.screenX - d.startX, e.screenY - d.startY) > 4) {
-    d.moved = true;
+  if (d.moved) {
     document.body.classList.add("dragging");
+    window.bobby.invoke("buddy:dragState", { dragging: true });
   }
   if (!d.moved) return;
   const dx = e.screenX - d.lastX;
@@ -209,6 +335,7 @@ function endDrag(e) {
   if (!d || e.pointerId !== d.id) return;
   dragState = null;
   document.body.classList.remove("dragging");
+  window.bobby.invoke("buddy:dragState", { dragging: false });
   try { ball.releasePointerCapture(e.pointerId); } catch {}
   if (d.moved) suppressClickUntil = Date.now() + 300;
 }
@@ -256,6 +383,15 @@ window.bobby.on("buddy:state", (s) => {
   stage.dataset.mood = state.mood || "idle";
   if (s.color) applyColor(s.color);
   if (s.scale) root.style.setProperty("--scale", String(s.scale));
+  setGeometry();
+  if (s.cosmetic !== undefined) {
+    state.cosmetic = s.cosmetic && typeof s.cosmetic === "object" ? s.cosmetic : null;
+    paintCosmetic();
+  }
+  if (s.cosmetic !== undefined) {
+    state.cosmetic = s.cosmetic && typeof s.cosmetic === "object" ? s.cosmetic : null;
+    paintCosmetic();
+  }
   if (s.name) {
     ball.title = `${s.name} — drag to move, click to poke, double-click to chat`;
     document.title = s.name;
@@ -264,4 +400,11 @@ window.bobby.on("buddy:state", (s) => {
   if (s.mood === "error" && prevMood !== "error") sound("boop");
 });
 
+window.bobby.on("buddy:cosmetic", ({ cosmetic }) => {
+  state.cosmetic = cosmetic && typeof cosmetic === "object" ? cosmetic : null;
+  paintCosmetic();
+});
+
 applyColor(state.color);
+setGeometry();
+paintCosmetic();

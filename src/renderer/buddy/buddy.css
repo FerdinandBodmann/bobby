@@ -26,7 +26,9 @@ body { -webkit-app-region: no-drag; }
   position: relative;
   width: 200px;
   height: 160px;
-  transform-origin: top center;
+  /* top-left origin: the stage is exactly the window's design size, so scaling
+     from here fills a window that main sizes at 200*scale x 160*scale */
+  transform-origin: top left;
   transform: scale(var(--scale));
 }
 
@@ -34,10 +36,11 @@ body { -webkit-app-region: no-drag; }
 
 .shadow {
   position: absolute;
-  left: 34px;
-  top: 127px;
-  width: 132px;
-  height: 16px;
+  left: 50%;
+  top: var(--shadow-top, 127px);
+  width: var(--shadow-w, 132px);
+  height: var(--shadow-h, 16px);
+  transform: translateX(-50%);
   border-radius: 50%;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0) 70%);
   filter: blur(3px);
@@ -48,10 +51,11 @@ body { -webkit-app-region: no-drag; }
 
 .ball {
   position: absolute;
-  left: 22px;
+  left: 50%;
   top: 26px;
-  width: 156px;
-  height: 110px;
+  width: var(--ball-w, 156px);
+  height: var(--ball-h, 110px);
+  transform: translateX(-50%);
   z-index: 2;
   cursor: grab;
   will-change: transform;
@@ -69,11 +73,26 @@ body.dragging .ball { cursor: grabbing; }
   inset: 0;
   width: 100%;
   height: 100%;
+  border-radius: var(--ball-radius, 46px);
   overflow: visible;
   pointer-events: none;
 }
 
 /* ---------- face ---------- */
+
+/* The cosmetic slot: one small decoration pinned to a spot on the bean, given
+   as a fraction of the bean box so it survives any scale. */
+.cosmetic {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+.cosmetic.on { display: block; }
+.cosmetic svg { display: block; width: 100%; height: 100%; }
 
 .eyes {
   position: absolute;
@@ -100,10 +119,11 @@ body.dragging .ball { cursor: grabbing; }
 .mouth {
   position: absolute;
   left: 50%;
-  top: 62%;
+  /* anchored to the bean, not to a percentage of a box that grows with scale */
+  top: var(--mouth-top, 68px);
   transform: translateX(-50%);
-  width: 26px;
-  height: 13px;
+  width: var(--mouth-w, 26px);
+  height: var(--mouth-h, 13px);
   border: 3px solid var(--ink);
   border-top-color: transparent;
   border-left-color: transparent;
@@ -117,9 +137,9 @@ body.dragging .ball { cursor: grabbing; }
 
 .blush {
   position: absolute;
-  top: 58%;
-  width: 23px;
-  height: 10px;
+  top: var(--cheek-y, 64px);
+  width: var(--cheek-w, 23px);
+  height: var(--cheek-h, 10px);
   border-radius: 50%;
   background: rgba(193, 104, 96, 0.4);
   filter: blur(2px);
@@ -128,8 +148,8 @@ body.dragging .ball { cursor: grabbing; }
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-.blush.left { left: 11%; }
-.blush.right { right: 11%; }
+.blush.left { left: var(--cheek-inset, 17px); }
+.blush.right { right: var(--cheek-inset, 17px); }
 
 .sparkle {
   position: absolute;
@@ -183,13 +203,16 @@ body.dragging .ball { cursor: grabbing; }
 #stage[data-mood="idle"] .ball { animation: bob 3.6s ease-in-out infinite; }
 #stage[data-mood="idle"] .shadow { animation: bobShadow 3.6s ease-in-out infinite; }
 
+/* These keyframes animate the element's own transform, so they have to carry
+   the centring translate too — otherwise each frame snaps the bean to the
+   window's left edge and it slides across instead of gently bobbing. */
 @keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
 }
 @keyframes bobShadow {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.88); opacity: 0.7; }
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  50% { transform: translateX(-50%) scale(0.88); opacity: 0.7; }
 }
 
 /* thinking */
@@ -207,8 +230,8 @@ body.dragging .ball { cursor: grabbing; }
 }
 
 @keyframes thinkPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.035); }
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.035); }
 }
 @keyframes sparkleSpin {
   0% { transform: rotate(0deg) scale(1); }
@@ -220,7 +243,7 @@ body.dragging .ball { cursor: grabbing; }
 #stage[data-mood="talking"] .ball { animation: talkJiggle 0.24s ease-in-out infinite alternate; }
 #stage[data-mood="talking"] .mouth {
   opacity: 1;
-  top: 62%;
+  top: var(--mouth-top, 68px);
   width: 18px;
   border: none;
   background: var(--ink);
@@ -229,8 +252,8 @@ body.dragging .ball { cursor: grabbing; }
 }
 
 @keyframes talkJiggle {
-  from { transform: translateY(0) rotate(-1deg); }
-  to { transform: translateY(-2.5px) rotate(1deg); }
+  from { transform: translateX(-50%) translateY(0) rotate(-1deg); }
+  to { transform: translateX(-50%) translateY(-2.5px) rotate(1deg); }
 }
 @keyframes mouthTalk {
   from { height: 5px; }
@@ -250,11 +273,11 @@ body.dragging .ball { cursor: grabbing; }
 #stage[data-mood="happy"] .eyes { transform: translate(var(--ex, 0px), calc(var(--ey, 0px) + 1px)); }
 
 @keyframes happyBounce {
-  0% { transform: translateY(0) scale(1, 1); }
-  30% { transform: translateY(-18px) scale(1.04, 0.96); }
-  55% { transform: translateY(0) scale(0.94, 1.07); }
-  70% { transform: translateY(-7px) scale(1.02, 0.98); }
-  100% { transform: translateY(0) scale(1, 1); }
+  0% { transform: translateX(-50%) translateY(0) scale(1, 1); }
+  30% { transform: translateX(-50%) translateY(-18px) scale(1.04, 0.96); }
+  55% { transform: translateX(-50%) translateY(0) scale(0.94, 1.07); }
+  70% { transform: translateX(-50%) translateY(-7px) scale(1.02, 0.98); }
+  100% { transform: translateX(-50%) translateY(0) scale(1, 1); }
 }
 
 /* error */
@@ -273,11 +296,11 @@ body.dragging .ball { cursor: grabbing; }
 #stage[data-mood="error"] .blush { opacity: 0.2; }
 
 @keyframes shakeX {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px) rotate(-1deg); }
-  40% { transform: translateX(4px) rotate(1deg); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
+  0%, 100% { transform: translateX(-50%); }
+  20% { transform: translate(-50%, 0) translateX(-4px) rotate(-1deg); }
+  40% { transform: translate(-50%, 0) translateX(4px) rotate(1deg); }
+  60% { transform: translate(-50%, 0) translateX(-3px); }
+  80% { transform: translate(-50%, 0) translateX(3px); }
 }
 
 /* sleeping */
@@ -293,8 +316,8 @@ body.dragging .ball { cursor: grabbing; }
 #stage[data-mood="sleeping"] .blush { opacity: 0.25; }
 
 @keyframes breathe {
-  0%, 100% { transform: scale(1, 1); }
-  50% { transform: scale(1.018, 0.975); }
+  0%, 100% { transform: translateX(-50%) scale(1, 1); }
+  50% { transform: translateX(-50%) scale(1.018, 0.975); }
 }
 
 /* blink */
@@ -303,10 +326,10 @@ body.dragging .ball { cursor: grabbing; }
 /* poke */
 #stage.poke .ball { animation: pokeSquash 0.45s cubic-bezier(0.2, 0.9, 0.3, 1); }
 @keyframes pokeSquash {
-  0% { transform: scale(1, 1); }
-  35% { transform: scale(1.12, 0.86); }
-  65% { transform: scale(0.95, 1.05); }
-  100% { transform: scale(1, 1); }
+  0% { transform: translateX(-50%) scale(1, 1); }
+  35% { transform: translateX(-50%) scale(1.12, 0.86); }
+  65% { transform: translateX(-50%) scale(0.95, 1.05); }
+  100% { transform: translateX(-50%) scale(1, 1); }
 }
 
 /* looks */
