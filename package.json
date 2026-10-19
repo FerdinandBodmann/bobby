@@ -1,0 +1,15 @@
+{
+  "name": "notch-buddy",
+  "version": "0.1.0",
+  "description": "A cute little ball that lives at the top of your screen, with an LLM brain and hands on your device.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "icons": "node scripts/gen-icon.js",
+    "test:mockllm": "node scripts/mock-llm.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}
