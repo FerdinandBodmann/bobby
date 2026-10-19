@@ -65,10 +65,17 @@ const smooth = (e0, e1, x) => {
 };
 
 const COL = {
-  body: hex("#BACF8D"),
-  bodyLight: hex("#D3E0B4"),
+  bodyLight: hex("#9797B4"),
+  body: hex("#726FCF"),
+  bodyDark: hex("#4C47EA"),
   ink: hex("#000000"),
 };
+
+const lerp3 = (a, b, t) => [
+  Math.round(lerp(a[0], b[0], t)),
+  Math.round(lerp(a[1], b[1], t)),
+  Math.round(lerp(a[2], b[2], t)),
+];
 
 /** Draw with antialiased alpha onto an RGBA buffer ("over" composite). */
 function paint(buf, W, x, y, color, alpha) {
@@ -136,12 +143,12 @@ function draw(size) {
 
       const bodyA = roundRectAlpha(px, py, cx, cy, hw, hh, rx, ry, 1.2);
       if (bodyA > 0) {
-        const t = clamp((py - (cy - hh)) / (0.5 * H), 0, 1);
-        const col = [
-          Math.round(lerp(COL.bodyLight[0], COL.body[0], t)),
-          Math.round(lerp(COL.bodyLight[1], COL.body[1], t)),
-          Math.round(lerp(COL.bodyLight[2], COL.body[2], t)),
-        ];
+        // same ramp as the in-app bean: light crown → base → deep foot
+        const t = clamp((py - (cy - hh)) / H, 0, 1);
+        const col =
+          t < 0.5
+            ? lerp3(COL.bodyLight, COL.body, t / 0.5)
+            : lerp3(COL.body, COL.bodyDark, (t - 0.5) / 0.5);
         paint(buf, size, x, y, col, bodyA);
 
         for (const ex of eyeXs) {

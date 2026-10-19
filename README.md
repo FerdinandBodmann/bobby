@@ -1,12 +1,13 @@
 # bobby
 
 A tiny bean who lives at the top of your screen. He looks like `art/booby.svg` (that's the
-artwork this build is based on: sage-green body, two dark oval eyes), watches your cursor with
+artwork this build is based on: grey-to-blue body ramp, two dark oval eyes), watches your cursor with
 his eyes, blinks, bobs, and talks back through a speech bubble.
 
-He has a real brain — your API key, your choice of provider — and hands: files, shell, web,
-clipboard, volume/brightness/media, notifications, and his own memory file. Nothing he does on
-your device happens without passing a consent gate first.
+He has a real brain — your API key, your choice of provider (OpenAI, Anthropic, OpenRouter, Groq,
+Mistral, Gemini, DeepSeek, xAI, Together, Perplexity, or your own local server) — and hands: files,
+shell, web, clipboard, volume/brightness/media, reminders, notifications, and his own memory file.
+Nothing he does on your device happens without passing a consent gate first.
 
 ```
 npm install
@@ -15,6 +16,10 @@ npm start
 
 On first run the settings window opens: pick a provider, set a key (or leave it empty for local
 Ollama), hit **Test**, save. Then double-click Bobby to open the chat.
+
+He'll also nap if you leave him alone for a few minutes (hover or poke to wake him), and you can
+ask him things like *"remind me to stretch in 20 minutes"* or *"how much disk space do I have
+left?"*.
 
 ---
 
@@ -62,9 +67,16 @@ Global shortcuts (also in the tray menu):
 
 - **Ollama (local)** — `http://localhost:11434/v1`, no key needed. `qwen2.5:0.5b` and
   `granite4:latest` work well; tools need a model that emits real tool calls.
-- **OpenAI** — any model, key required.
-- **Anthropic** — key required, streaming tool calls supported.
-- **Custom (OpenAI-compatible)** — LM Studio, llama.cpp, vLLM, whatever.
+- **LM Studio / llama.cpp / vLLM** — local presets, no key, just point them at the port.
+- **OpenAI**, **Anthropic** — key required.
+- **OpenRouter**, **Groq**, **Mistral**, **Google Gemini**, **DeepSeek**, **xAI**, **Together**,
+  **Perplexity** — cloud presets with a key.
+- **Custom (OpenAI-compatible)** / **Custom (Anthropic-compatible)** — anything else, including
+  proxies.
+
+The **list** button next to *Model* asks whichever provider you've picked for its model list
+(`/models`, Anthropic's `/v1/models`, or Ollama's `/api/tags`) using your saved key, and drops
+them into the datalist so you can pick instead of typing.
 
 Keys are stored with Electron's `safeStorage`. If the OS keyring isn't available (common on
 minimal Wayland boxes) it falls back to base64 with a `b64:` prefix — that's obfuscation, not
@@ -97,6 +109,8 @@ encryption. Treat `config.json` as containing a secret if you're on the fallback
 | system | `volume`, `brightness`, `media`, `clipboard` | Linux backends: `wpctl`, `brightnessctl`, `playerctl`, `wl-clipboard` |
 | apps | `notify`, `open_url` | `notify-send` |
 | memory | `read_notes`, `append_notes` | his own `notes.md`, always allowed |
+| time | `set_reminder`, `list_reminders`, `cancel_reminder` | fires a speech bubble + desktop notification; reminders persist across restarts |
+| machine | `system_info` | battery, memory, disk, CPU load, uptime (Node's `os` + `df`, so it's portable) |
 
 Linux is where this was built and tested. The file, shell, web and notes tools are
 cross-platform; the system tools are wired to Wayland/Linux commands and will fail cleanly
@@ -120,7 +134,7 @@ npm run icons
 ```
 
 `scripts/gen-icon.js` draws the bean from `art/booby.svg` (body proportions, eye geometry,
-palette `#BACF8D` / `#D3E0B4`, eyes at 42% black) into `assets/icon-*.png` with no image
+palette `#9797B4` → `#726FCF` → `#4C47EA`, eyes at 42% black) into `assets/icon-*.png` with no image
 libraries — just zlib.
 
 ## Developing / testing the running app

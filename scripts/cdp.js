@@ -33,10 +33,19 @@ async function connect(match) {
       pending.delete(m.id);
     }
   };
-  const send = (method, params = {}) =>
+  const send = (method, params = {}, timeoutMs = 15000) =>
     new Promise((resolve) => {
       const i = ++id;
-      pending.set(i, resolve);
+      const timer = setTimeout(() => {
+        if (pending.has(i)) {
+          pending.delete(i);
+          resolve(null);
+        }
+      }, timeoutMs);
+      pending.set(i, (m) => {
+        clearTimeout(timer);
+        resolve(m);
+      });
       ws.send(JSON.stringify({ id: i, method, params }));
     });
   return { send, close: () => ws.close(), target: t };
@@ -70,7 +79,13 @@ async function main() {
         console.log(typeof v === "string" ? v : JSON.stringify(v, null, 2));
       }
     } else if (flag === "--shot") {
-      const r = await c.send("Page.captureScreenshot", { format: "png", fromSurface: true });
+      // just ask the compositor for whatever it last drew; if it never drew a
+      // frame, fall back to a plain screenshot instead of hanging forever
+      let r = await c.send("Page.captureScreenshot", { format: "png", fromSurface: true, captureBeyondViewport: false }, 3000);
+      if (!r || !r.result?.data) {
+        console.log("no frame captured — buddy window has nothing composited right now");
+        return;
+      }
       fs.writeFileSync(arg, Buffer.from(r.result.data, "base64"));
       console.log("wrote", arg);
     } else {
