@@ -11,6 +11,7 @@
    sodipodi:docname="booby.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
@@ -25,7 +26,7 @@
      inkscape:document-units="mm"
      inkscape:zoom="0.80087682"
      inkscape:cx="396.44049"
-     inkscape:cy="561.25984"
+     inkscape:cy="561.25985"
      inkscape:window-width="1920"
      inkscape:window-height="1133"
      inkscape:window-x="0"
@@ -33,13 +34,35 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
-     id="defs1" />
+     id="defs1">
+    <linearGradient
+       id="linearGradient1"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#a8a8a8;stop-opacity:1;"
+         offset="0.03383966"
+         id="stop1" />
+      <stop
+         style="stop-color:#3c37f6;stop-opacity:1;"
+         offset="1"
+         id="stop2" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1"
+       id="linearGradient2"
+       x1="78.131813"
+       y1="70.037811"
+       x2="78.131813"
+       y2="127.85205"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#bacf8d;stroke-width:0.264583;paint-order:fill markers stroke;fill-opacity:1"
+       style="fill:url(#linearGradient2);stroke-width:0.265;paint-order:fill markers stroke;fill-opacity:1;stroke-dasharray:none"
        id="rect1"
        width="57.81424"
        height="40.635151"

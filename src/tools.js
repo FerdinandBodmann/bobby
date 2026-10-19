@@ -13,6 +13,7 @@ const fsp = require("fs/promises");
 const path = require("path");
 const os = require("os");
 const cfgmod = require("./config");
+const reminders = require("./reminders");
 
 const HOME = os.homedir();
 const IS_MAC = process.platform === "darwin";
@@ -81,6 +82,115 @@ function approvedPath(p) {
 function trimText(s, n = 20000) {
   s = String(s ?? "");
   return s.length > n ? s.slice(0, n) + `\n… [truncated ${s.length - n} chars]` : s;
+}
+
+/* ---------------- reminders + system facts ---------------- */
+
+function parseWhen(a) {
+  const now = Date.now();
+  const mins = Number(a.in_minutes);
+  if (Number.isFinite(mins) && mins >= 0) return now + Math.round(mins * 60000);
+  const raw = String(a.at || "").trim();
+  if (raw) {
+    let m = /^(\d{1,2}):(\d{2})$/.exec(raw);
+    if (m && Number(m[1]) < 24 && Number(m[2]) < 60) {
+      const d = new Date();
+      d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+      if (d.getTime() <= now + 10000) d.setDate(d.getDate() + 1);
+      return d.getTime();
+    }
+    m = /^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i.exec(raw);
+    if (m) {
+      let h = Number(m[1]) % 12;
+      if (m[3].toLowerCase() === "pm") h += 12;
+      const d = new Date();
+      d.setHours(h, Number(m[2] || 0), 0, 0);
+      if (d.getTime() <= now + 10000) d.setDate(d.getDate() + 1);
+      return d.getTime();
+    }
+    const t = Date.parse(raw);
+    if (!Number.isNaN(t)) return t;
+  }
+  throw new Error('Tell me when — pass in_minutes, or at like "15:30".');
+}
+
+function fmtWhen(ms) {
+  return new Date(ms).toLocaleString(undefined, {
+    weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function whenLabel(a) {
+  try {
+    return ` (${fmtWhen(parseWhen(a))})`;
+  } catch {
+    return "";
+  }
+}
+
+async function batteryInfo() {
+  try {
+    const base = "/sys/class/power_supply";
+    const names = fs.readdirSync(base).filter((n) => n.startsWith("BAT"));
+    if (names.length) {
+      const read = (n) => {
+        try { return fs.readFileSync(path.join(base, names[0], n), "utf8").trim(); } catch { return ""; }
+      };
+      const cap = read("capacity");
+      const st = read("status");
+      return `Battery: ${cap || "?"}%${st ? ` (${st.toLowerCase()})` : ""}`;
+    }
+  } catch {
+    /* not linux, or no sysfs */
+  }
+  if (IS_MAC) {
+    try {
+      const out = await sh("pmset", ["-g", "batt"]);
+      const m = /(\d+)%;\s*([^;)]+)/.exec(out);
+      if (m) return `Battery: ${m[1]}%${m[2] ? ` (${m[2].trim().toLowerCase()})` : ""}`;
+    } catch { /* ignore */ }
+  }
+  return "Battery: no battery here.";
+}
+
+function memoryInfo() {
+  const gb = (n) => (n / 1024 ** 3).toFixed(1);
+  const used = os.totalmem() - os.freemem();
+  return `Memory: ${gb(used)} GB used of ${gb(os.totalmem())} GB (${gb(os.freemem())} GB free).`;
+}
+
+async function diskInfo() {
+  if (IS_WIN) return "Disk: open Explorer to check free space.";
+  try {
+    const out = await sh("df", ["-h", "/", HOME]);
+    const rows = [];
+    const seen = new Set();
+    for (const line of out.trim().split("\n").slice(1)) {
+      const parts = line.trim().split(/\s+/);
+      const mount = parts[parts.length - 1];
+      if (!parts[1] || seen.has(mount)) continue;
+      seen.add(mount);
+      rows.push(`${mount}: ${parts[3]} free of ${parts[1]} (${parts[4]} used)`);
+    }
+    return `Disk: ${rows.join(" · ")}`;
+  } catch {
+    return "Disk: could not read free space.";
+  }
+}
+
+function cpuInfo() {
+  const cpus = os.cpus();
+  const load = os.loadavg().map((n) => n.toFixed(2)).join(" / ");
+  return `CPU: ${(cpus[0]?.model || "unknown").trim()} ×${cpus.length}, load ${load}.`;
+}
+
+function uptimeInfo() {
+  let s = Math.round(os.uptime());
+  const d = Math.floor(s / 86400);
+  s %= 86400;
+  const h = Math.floor(s / 3600);
+  s %= 3600;
+  return `Uptime: ${d ? `${d}d ` : ""}${h ? `${h}h ` : ""}${Math.floor(s / 60)}m.`;
 }
 
 const DANGEROUS_CMD = new RegExp(
@@ -650,6 +760,86 @@ const tools = [
     async run(a) {
       cfgmod.appendNotes(String(a.text || ""));
       return "noted";
+    },
+  },
+  {
+    name: "set_reminder",
+    description:
+      "Set a reminder for the user. It fires later as a speech bubble plus a desktop notification. Give in_minutes (a number) or at (a clock time).",
+    parameters: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "What to remind the user about." },
+        in_minutes: { type: "number", description: "Fire this many minutes from now." },
+        at: { type: "string", description: 'Local time: "15:30", "3pm", or an ISO date-time like "2026-10-20T09:00".' },
+      },
+      required: ["text"],
+    },
+    summarize: (a) => `Remind me${whenLabel(a)}: ${a.text?.slice(0, 70)}`,
+    policy: () => ({ level: "auto" }),
+    async run(a) {
+      const due = parseWhen(a);
+      const r = reminders.add({ text: a.text, due });
+      return `Reminder set for ${fmtWhen(due)} (id ${r.id}): ${r.text}`;
+    },
+  },
+  {
+    name: "list_reminders",
+    description: "List the user's pending reminders with their ids and due times.",
+    parameters: { type: "object", properties: {} },
+    summarize: () => "Check my reminders",
+    policy: () => ({ level: "auto" }),
+    async run() {
+      const list = reminders.pending();
+      if (!list.length) return "No reminders waiting.";
+      return list.map((r) => `${r.id} · ${fmtWhen(r.due)} · ${r.text}`).join("\n");
+    },
+  },
+  {
+    name: "cancel_reminder",
+    description: "Cancel a pending reminder — pass the id from list_reminders, or some of its text.",
+    parameters: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Reminder id, if you know it." },
+        text: { type: "string", description: "Text to match a reminder by." },
+      },
+    },
+    summarize: (a) => `Cancel reminder ${a.id || a.text || ""}`.trim(),
+    policy: () => ({ level: "auto" }),
+    async run(a) {
+      if (a.id && reminders.cancel(a.id)) return "reminder cancelled";
+      if (a.text) {
+        const hit = reminders.cancelByText(a.text);
+        if (hit) return `cancelled reminder "${hit.text}"`;
+      }
+      throw new Error("no matching reminder found — try list_reminders");
+    },
+  },
+  {
+    name: "system_info",
+    description: "Facts about this computer: battery, memory, disk space, CPU load, uptime.",
+    parameters: {
+      type: "object",
+      properties: {
+        what: {
+          type: "string",
+          enum: ["battery", "memory", "disk", "cpu", "uptime", "all"],
+          description: "Which fact to look up (default all).",
+        },
+      },
+    },
+    summarize: (a) => `Check ${a.what || "all"}`,
+    policy: () => ({ level: "auto" }),
+    async run(a) {
+      const what = a.what || "all";
+      const out = [];
+      if (what === "battery" || what === "all") out.push(await batteryInfo());
+      if (what === "memory" || what === "all") out.push(memoryInfo());
+      if (what === "disk" || what === "all") out.push(await diskInfo());
+      if (what === "cpu" || what === "all") out.push(cpuInfo());
+      if (what === "uptime" || what === "all") out.push(uptimeInfo());
+      return out.join("\n");
     },
   },
 ];

@@ -2,9 +2,11 @@
 const path = require("path");
 const {
   app, BrowserWindow, ipcMain, Tray, Menu, globalShortcut, screen, nativeImage, dialog,
+  Notification,
 } = require("electron");
 const cfgmod = require("./config");
 const permissions = require("./permissions");
+const reminders = require("./reminders");
 const { Agent } = require("./agent");
 const { Overlay } = require("./overlay");
 
@@ -48,6 +50,7 @@ app.whenReady().then(() => {
   registerShortcuts();
   wireIpc();
   applyAutostart(cfgmod.get().autostart);
+  reminders.init(fireReminder);
 
   if (cfgmod.get().firstRun) {
     cfgmod.update({ firstRun: false });
@@ -273,6 +276,27 @@ function scheduleIdle(ms) {
   }, ms);
 }
 
+function fireReminder(r) {
+  const name = cfgmod.get().appearance.name || "Bobby";
+  const text = `⏰ ${r.text}`;
+  overlay.bubble(text, { sticky: true });
+  if (!agent?.busy) {
+    overlay.setMood("happy");
+    setTimeout(() => {
+      if (!agent?.busy && overlay.mood === "happy") overlay.setMood("idle");
+    }, 3000);
+  }
+  // let it linger longer than a normal line, then clear it
+  setTimeout(() => {
+    if (overlay.mood !== "thinking" && overlay.mood !== "talking") overlay.hideBubble();
+  }, 20000);
+  try {
+    if (Notification.isSupported()) new Notification({ title: name, body: r.text }).show();
+  } catch (err) {
+    console.warn("[reminders] notification failed:", err.message);
+  }
+}
+
 function onAgentEvent(e) {
   switch (e.type) {
     case "user":
@@ -391,7 +415,17 @@ function publicSettings() {
     hasKey: !!cfgmod.getApiKey(),
     keyBackend: cfgmod.keyBackend(),
     providers: Object.fromEntries(
-      Object.entries(cfgmod.PROVIDERS).map(([k, v]) => [k, { label: v.label, baseUrl: v.baseUrl, model: v.model, needsKey: v.needsKey }])
+      Object.entries(cfgmod.PROVIDERS).map(([k, v]) => [
+        k,
+        {
+          label: v.label,
+          baseUrl: v.baseUrl,
+          model: v.model,
+          needsKey: v.needsKey,
+          local: !!v.local,
+          hint: v.hint || "",
+        },
+      ])
     ),
     effective: cfgmod.providerSettings(),
     configured: cfgmod.isConfigured(),
@@ -474,6 +508,10 @@ function wireIpc() {
     }, 1600);
     return q;
   });
+  ipcMain.handle("buddy:wake", () => {
+    overlay.wake();
+    return overlay.mood;
+  });
   ipcMain.handle("buddy:moveBy", (_e, { dx, dy } = {}) => {
     const win = overlay.buddy;
     if (!win || win.isDestroyed()) return false;
@@ -539,16 +577,34 @@ function wireIpc() {
   });
 
   ipcMain.handle("settings:models", async (_e, { baseUrl, provider }) => {
+    const def = cfgmod.PROVIDERS[provider] || cfgmod.PROVIDERS.custom;
+    const base = (baseUrl || def.baseUrl || "").replace(/\/+$/, "");
+    if (!base) return [];
+    const key = cfgmod.getApiKey();
+    const timeout = AbortSignal.timeout(9000);
     try {
-      const cfg = cfgmod.get();
-      const def = cfgmod.PROVIDERS[provider] || cfgmod.PROVIDERS.custom;
-      const base = (baseUrl || def.baseUrl || "").replace(/\/+$/, "");
-      if (provider !== "ollama" && !base.includes("11434")) return [];
-      const root = base.replace(/\/v1$/, "");
-      const res = await fetch(`${root}/api/tags`, { signal: AbortSignal.timeout(4000) });
+      if (def.kind === "anthropic") {
+        const res = await fetch(`${base}/v1/models`, {
+          headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+          signal: timeout,
+        });
+        if (!res.ok) return [];
+        const j = await res.json();
+        return (j.data || []).map((m) => m.id).filter(Boolean).slice(0, 300);
+      }
+      if (base.includes("11434")) {
+        const res = await fetch(`${base.replace(/\/v1$/, "")}/api/tags`, { signal: timeout });
+        if (!res.ok) return [];
+        const j = await res.json();
+        return (j.models || []).map((m) => m.name).filter(Boolean);
+      }
+      const res = await fetch(`${base}/models`, {
+        headers: key ? { Authorization: `Bearer ${key}` } : {},
+        signal: timeout,
+      });
       if (!res.ok) return [];
       const j = await res.json();
-      return (j.models || []).map((m) => m.name).filter(Boolean);
+      return (j.data || []).map((m) => m.id || m.name).filter(Boolean).slice(0, 300);
     } catch {
       return [];
     }

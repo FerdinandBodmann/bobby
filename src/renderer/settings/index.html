@@ -24,12 +24,8 @@
           <p class="help">Bring your own key. The key is stored in the OS keychain, never in plain text.</p>
 
           <label>Provider</label>
-          <select id="provider">
-            <option value="ollama">Ollama (local)</option>
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic</option>
-            <option value="custom">Custom (OpenAI-compatible)</option>
-          </select>
+          <select id="provider"></select>
+          <p class="help" id="providerHint"></p>
 
           <div class="grid2">
             <div>
@@ -72,6 +68,7 @@
             <div>
               <label>Colour</label>
               <input id="color" type="color" />
+              <div class="swatches" id="swatches"></div>
             </div>
             <div>
               <label>Size <span class="hint" id="scaleVal">100%</span></label>

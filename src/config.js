@@ -6,19 +6,52 @@ const path = require("path");
 const DEFAULT_PERSONA = `You're a tiny, cheerful bean who lives on your human's screen. You're curious, a little mischievous, warm, and you speak in short, casual sentences. You have feelings: you get excited when you help, a bit pouty when you're ignored, and very proud of your little bean shape. Never corporate, never long-winded. Use at most one emoji per message, and only when it fits.`;
 
 const PROVIDERS = {
+  /* --- local, no key --- */
   ollama: {
     label: "Ollama (local)",
     kind: "openai",
     baseUrl: "http://localhost:11434/v1",
     model: "qwen3.5:0.8b",
     needsKey: false,
+    local: true,
+    hint: "Runs on this machine. Nothing leaves the box.",
   },
+  lmstudio: {
+    label: "LM Studio (local)",
+    kind: "openai",
+    baseUrl: "http://localhost:1234/v1",
+    model: "",
+    needsKey: false,
+    local: true,
+    hint: "LM Studio's local server (port 1234).",
+  },
+  llamacpp: {
+    label: "llama.cpp server (local)",
+    kind: "openai",
+    baseUrl: "http://localhost:8080/v1",
+    model: "",
+    needsKey: false,
+    local: true,
+    hint: "llama-server started with --port 8080.",
+  },
+  vllm: {
+    label: "vLLM (local)",
+    kind: "openai",
+    baseUrl: "http://localhost:8000/v1",
+    model: "",
+    needsKey: false,
+    local: true,
+    hint: "vLLM's OpenAI-compatible server (port 8000).",
+  },
+
+  /* --- cloud, key needed --- */
   openai: {
     label: "OpenAI",
     kind: "openai",
     baseUrl: "https://api.openai.com/v1",
     model: "gpt-4o-mini",
     needsKey: true,
+    hint: "Keys at platform.openai.com/api-keys.",
   },
   anthropic: {
     label: "Anthropic",
@@ -26,13 +59,89 @@ const PROVIDERS = {
     baseUrl: "https://api.anthropic.com",
     model: "claude-sonnet-4-5",
     needsKey: true,
+    hint: "Keys at console.anthropic.com/keys.",
   },
+  openrouter: {
+    label: "OpenRouter",
+    kind: "openai",
+    baseUrl: "https://openrouter.ai/api/v1",
+    model: "openai/gpt-4o-mini",
+    needsKey: true,
+    hint: "One key for hundreds of models — openrouter.ai/keys.",
+  },
+  groq: {
+    label: "Groq",
+    kind: "openai",
+    baseUrl: "https://api.groq.com/openai/v1",
+    model: "llama-3.3-70b-versatile",
+    needsKey: true,
+    hint: "Very fast, generous free tier — console.groq.com/keys.",
+  },
+  mistral: {
+    label: "Mistral",
+    kind: "openai",
+    baseUrl: "https://api.mistral.ai/v1",
+    model: "mistral-small-latest",
+    needsKey: true,
+    hint: "Keys at console.mistral.ai/api-keys.",
+  },
+  google: {
+    label: "Google Gemini",
+    kind: "openai",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    model: "gemini-2.5-flash",
+    needsKey: true,
+    hint: "Gemini over its OpenAI-compatible endpoint — aistudio.google.com/apikey.",
+  },
+  deepseek: {
+    label: "DeepSeek",
+    kind: "openai",
+    baseUrl: "https://api.deepseek.com/v1",
+    model: "deepseek-chat",
+    needsKey: true,
+    hint: "Keys at platform.deepseek.com/api_keys.",
+  },
+  xai: {
+    label: "xAI (Grok)",
+    kind: "openai",
+    baseUrl: "https://api.x.ai/v1",
+    model: "grok-2-latest",
+    needsKey: true,
+    hint: "Keys at console.x.ai.",
+  },
+  together: {
+    label: "Together AI",
+    kind: "openai",
+    baseUrl: "https://api.together.xyz/v1",
+    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    needsKey: true,
+    hint: "Keys at api.together.ai/settings/api-keys.",
+  },
+  perplexity: {
+    label: "Perplexity",
+    kind: "openai",
+    baseUrl: "https://api.perplexity.ai",
+    model: "sonar",
+    needsKey: true,
+    hint: "Answers with live web sources — perplexity.ai/settings/api.",
+  },
+
+  /* --- escape hatches --- */
   custom: {
     label: "Custom (OpenAI-compatible)",
     kind: "openai",
     baseUrl: "http://localhost:1234/v1",
     model: "",
     needsKey: false,
+    hint: "Any server that speaks the OpenAI chat API.",
+  },
+  customAnthropic: {
+    label: "Custom (Anthropic-compatible)",
+    kind: "anthropic",
+    baseUrl: "https://api.anthropic.com",
+    model: "",
+    needsKey: true,
+    hint: "Proxies and gateways that speak the Anthropic Messages API.",
   },
 };
 
@@ -50,7 +159,7 @@ const DEFAULTS = {
   toolsEnabled: true,
   appearance: {
     name: "Bobby",
-    color: "#BACF8D",
+    color: "#726FCF",
     scale: 1,
     sounds: true,
   },
@@ -64,6 +173,7 @@ const DEFAULTS = {
   autostart: false,
   firstRun: true,
   chatHistory: [],
+  reminders: [],
 };
 
 let dir = null;

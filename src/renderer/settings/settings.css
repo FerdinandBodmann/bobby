@@ -1,5 +1,5 @@
 :root {
-  --accent: #bacf8d;
+  --accent: #726fcf;
   --bg: #10131c;
   --bg2: #171b28;
   --bg3: #1e2333;
@@ -164,9 +164,31 @@ select { cursor: pointer; }
 }
 .grid3 {
   display: grid;
-  grid-template-columns: 100px 1fr 140px;
+  grid-template-columns: 130px 1fr 140px;
   gap: 16px;
   align-items: end;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+.swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  background: var(--sw);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.swatch:hover { transform: scale(1.14); }
+.swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sw) 65%, transparent);
 }
 
 .withbtn { display: flex; gap: 8px; }

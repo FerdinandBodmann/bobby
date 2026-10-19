@@ -7,7 +7,7 @@ const root = document.documentElement;
 const state = {
   mood: "idle",
   name: "Bobby",
-  color: "#BACF8D",
+  color: "#726FCF",
   scale: 1,
   sounds: true,
 };
@@ -18,24 +18,52 @@ function hexToRgb(hex) {
   const h = String(hex || "").replace("#", "");
   const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
   const n = parseInt(full, 16);
-  if (Number.isNaN(n)) return { r: 186, g: 207, b: 141 };
+  if (Number.isNaN(n)) return { r: 114, g: 111, b: 207 };
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 const toHex = (r, g, b) =>
   "#" + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
 
-function mix(rgb, target, t) {
-  return {
-    r: rgb.r + (target.r - rgb.r) * t,
-    g: rgb.g + (target.g - rgb.g) * t,
-    b: rgb.b + (target.b - rgb.b) * t,
-  };
+function rgbToHsl({ r, g, b }) {
+  const rr = r / 255, gg = g / 255, bb = b / 255;
+  const max = Math.max(rr, gg, bb);
+  const min = Math.min(rr, gg, bb);
+  const d = max - min;
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  if (d > 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === rr) h = 60 * (((gg - bb) / d) % 6);
+    else if (max === gg) h = 60 * ((bb - rr) / d + 2);
+    else h = 60 * ((rr - gg) / d + 4);
+  }
+  return { h: (h + 360) % 360, s, l };
 }
+
+function hslToRgb(h, s, l) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let tri;
+  if (h < 60) tri = [c, x, 0];
+  else if (h < 120) tri = [x, c, 0];
+  else if (h < 180) tri = [0, c, x];
+  else if (h < 240) tri = [0, x, c];
+  else if (h < 300) tri = [x, 0, c];
+  else tri = [c, 0, x];
+  return { r: (tri[0] + m) * 255, g: (tri[1] + m) * 255, b: (tri[2] + m) * 255 };
+}
+
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
 function applyColor(hex) {
   const base = hexToRgb(hex);
-  const light = mix(base, { r: 255, g: 255, b: 255 }, 0.55);
-  const dark = mix(base, { r: 20, g: 40, b: 36 }, 0.38);
+  const { h, s, l } = rgbToHsl(base);
+  // Artwork shading: the crown catches light (pale, nearly neutral) and the
+  // base sinks into a deeper, richer shade of the very same hue.
+  const light = hslToRgb(h, clamp01(s * 0.33), clamp01(l * 1.04));
+  const dark = hslToRgb(h, clamp01(s * 1.58), clamp01(l * 0.96));
   root.style.setProperty("--ball-color", toHex(base.r, base.g, base.b));
   root.style.setProperty("--ball-light", toHex(light.r, light.g, light.b));
   root.style.setProperty("--ball-dark", toHex(dark.r, dark.g, dark.b));
@@ -50,6 +78,8 @@ function setLook(x, y) {
   stage.style.setProperty("--ey", `${y.toFixed(1)}px`);
 }
 
+let wakeArmed = true;
+
 window.addEventListener("mousemove", (e) => {
   const r = ball.getBoundingClientRect();
   const cx = r.left + r.width / 2;
@@ -58,6 +88,17 @@ window.addEventListener("mousemove", (e) => {
   const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / (r.height / 2)));
   setLook(dx * 5, dy * 4);
   lastMove = Date.now();
+
+  // Sneak the mouse over a napping Bobby and he stirs awake.
+  if (state.mood === "sleeping" && wakeArmed) {
+    const over =
+      e.clientX >= r.left - 8 && e.clientX <= r.right + 8 &&
+      e.clientY >= r.top - 8 && e.clientY <= r.bottom + 8;
+    if (over) {
+      wakeArmed = false;
+      window.bobby.invoke("buddy:wake").catch(() => {}).finally(() => (wakeArmed = true));
+    }
+  }
 });
 
 // When nothing is happening, glance around now and then.

@@ -46,6 +46,134 @@ function setStatus(text) {
   statusline.hidden = false;
 }
 
+/* ---------------- markdown (small and safe) ---------------- */
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+  );
+}
+
+function renderMarkdown(src) {
+  const stash = [];
+  const keep = (html) => {
+    stash.push(html);
+    return `\u0001${stash.length - 1}\u0001`;
+  };
+
+  let text = String(src ?? "");
+  text = text.replace(/```[ \t]*([a-z0-9+-]*)[ \t]*\n([\s\S]*?)```/gi, (_m, _lang, code) =>
+    keep(`<pre><code>${escapeHtml(code.replace(/\s+$/, ""))}</code></pre>`)
+  );
+
+  text = escapeHtml(text);
+  text = text.replace(/`([^`\n]+)`/g, (_m, code) => keep(`<code>${code}</code>`));
+  text = text.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+
+  const out = [];
+  let list = null;
+  let para = [];
+  const closeList = () => {
+    if (list) {
+      out.push(`</${list}>`);
+      list = null;
+    }
+  };
+  const flushPara = () => {
+    if (para.length) {
+      out.push(`<p>${para.join("<br>")}</p>`);
+      para = [];
+    }
+  };
+  const openList = (kind) => {
+    flushPara();
+    if (list !== kind) {
+      closeList();
+      out.push(`<${kind}>`);
+      list = kind;
+    }
+  };
+
+  for (const line of text.split("\n")) {
+    const t = line.trim();
+    if (!t) {
+      flushPara();
+      closeList();
+      continue;
+    }
+    if (/^\u0001\d+\u0001$/.test(t)) {
+      flushPara();
+      closeList();
+      out.push(t);
+      continue;
+    }
+    const h = /^(#{1,4})\s+(.*)$/.exec(t);
+    if (h) {
+      flushPara();
+      closeList();
+      const lvl = Math.min(4, h[1].length + 2);
+      out.push(`<h${lvl}>${h[2]}</h${lvl}>`);
+      continue;
+    }
+    const ul = /^[-*•]\s+(.*)$/.exec(t);
+    if (ul) {
+      openList("ul");
+      out.push(`<li>${ul[1]}</li>`);
+      continue;
+    }
+    const ol = /^\d+[.)]\s+(.*)$/.exec(t);
+    if (ol) {
+      openList("ol");
+      out.push(`<li>${ol[1]}</li>`);
+      continue;
+    }
+    const quote = /^&gt;\s?(.*)$/.exec(t);
+    if (quote) {
+      flushPara();
+      closeList();
+      out.push(`<blockquote>${quote[1]}</blockquote>`);
+      continue;
+    }
+    closeList();
+    para.push(t);
+  }
+  flushPara();
+  closeList();
+
+  return out.join("").replace(/\u0001(\d+)\u0001/g, (_m, i) => stash[Number(i)] || "");
+}
+
+function copyButton(rec) {
+  const btn = el("button", "copy", "copy");
+  btn.title = "copy reply";
+  btn.type = "button";
+  btn.onclick = async () => {
+    const text = rec.raw || rec.textEl.textContent || "";
+    let ok = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand("copy");
+        ta.remove();
+      }
+    } catch {
+      ok = false;
+    }
+    btn.textContent = ok ? "copied ✓" : "couldn't copy";
+    setTimeout(() => (btn.textContent = "copy"), 1500);
+  };
+  return btn;
+}
+
 /* ---------------- rendering ---------------- */
 
 function clearWelcome() {
@@ -69,11 +197,21 @@ function makeEntry(id, role) {
   wrap.appendChild(textEl);
   const toolsEl = el("div", "tools");
   wrap.appendChild(toolsEl);
+  const rec = { el: wrap, textEl, toolsEl, toolEls: new Map(), raw: "" };
+  if (role === "assistant") {
+    rec.copy = copyButton(rec);
+    wrap.appendChild(rec.copy);
+  }
   messages.appendChild(wrap);
-  const rec = { el: wrap, textEl, toolsEl, toolEls: new Map() };
   entries.set(id, rec);
   scrollDown(true);
   return rec;
+}
+
+function setAssistantText(rec, raw) {
+  rec.raw = raw;
+  rec.textEl.innerHTML = renderMarkdown(raw);
+  if (rec.copy) rec.copy.hidden = !raw.trim();
 }
 
 function renderEntry(entry) {
@@ -88,7 +226,7 @@ function renderEntry(entry) {
   if (entry.role === "assistant") {
     clearWelcome();
     const rec = makeEntry(entry.id, "assistant");
-    rec.textEl.textContent = entry.text || "";
+    setAssistantText(rec, entry.text || "");
     for (const t of entry.tools || []) addTool(entry.id, t, t.status, t.result);
     currentId = entry.id;
   }
@@ -102,7 +240,8 @@ function ensureAssistant(id) {
 
 function addDelta(id, text) {
   const rec = ensureAssistant(id);
-  rec.textEl.textContent += text;
+  rec.raw = (rec.raw || "") + text;
+  setAssistantText(rec, rec.raw);
   scrollDown(false);
 }
 
@@ -122,6 +261,10 @@ const TOOL_LABEL = {
   open_url: "↗ open_url",
   read_notes: "🧠 read_notes",
   append_notes: "🧠 append_notes",
+  set_reminder: "⏰ set_reminder",
+  list_reminders: "⏰ list_reminders",
+  cancel_reminder: "⏰ cancel_reminder",
+  system_info: "🖥 system_info",
 };
 
 function addTool(entryId, tool, status, result) {

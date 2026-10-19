@@ -26,6 +26,8 @@ const QUIPS = [
   "again! again!",
 ];
 
+const NAP_AFTER_MS = Number(process.env.BOBBY_NAP_MS) || 5 * 60 * 1000; // quiet this long and he dozes off
+
 class Overlay {
   constructor({ onContextMenu } = {}) {
     this.cfg = null;
@@ -36,6 +38,7 @@ class Overlay {
     this.consent = null;
     this.bubbleTimer = null;
     this.saveTimer = null;
+    this.idleTimer = null;
     this.visible = true;
   }
 
@@ -225,6 +228,7 @@ class Overlay {
 
   bubble(text, { sticky = false, typing = false } = {}) {
     if (!this.visible) return;
+    this.touch();
     const win = this.ensureBubble();
     clearTimeout(this.bubbleTimer);
     const send = () => {
@@ -262,7 +266,26 @@ class Overlay {
 
   setMood(mood) {
     this.mood = mood;
+    if (mood !== "sleeping") this.touch();
     this.pushState(mood);
+  }
+
+  /* ---------------- naps ---------------- */
+
+  // Any interaction pushes the nap clock back; after a long silence he dozes off.
+  touch() {
+    clearTimeout(this.idleTimer);
+    if (!this.visible) return;
+    this.idleTimer = setTimeout(() => {
+      if (this.mood === "idle" && !this.consent) this.setMood("sleeping");
+    }, NAP_AFTER_MS);
+  }
+
+  wake() {
+    const asleep = this.mood === "sleeping";
+    if (asleep) this.setMood("idle");
+    this.touch();
+    return asleep;
   }
 
   applyAppearance() {
@@ -374,7 +397,12 @@ class Overlay {
       if (this.visible) this.buddy.showInactive();
       else this.buddy.hide();
     }
-    if (!this.visible) this.hideBubble();
+    if (!this.visible) {
+      clearTimeout(this.idleTimer);
+      this.hideBubble();
+    } else {
+      this.touch();
+    }
     return this.visible;
   }
 }

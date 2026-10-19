@@ -32,12 +32,39 @@ let keyValue = "";
 (async function boot() {
   try {
     data = await window.bobby.invoke("settings:get");
+    populateProviders(data);
     applyToForm(data);
+    updateProviderHint();
     await loadAudit();
   } catch (e) {
     flash("failed to load settings: " + e.message, "bad");
   }
 })();
+
+function populateProviders(d) {
+  const providers = d.providers || {};
+  const local = document.createElement("optgroup");
+  local.label = "On this machine";
+  const cloud = document.createElement("optgroup");
+  cloud.label = "Cloud providers";
+  for (const [key, def] of Object.entries(providers)) {
+    const o = document.createElement("option");
+    o.value = key;
+    o.textContent = def.label + (def.needsKey ? "" : " · no key needed");
+    (def.local ? local : cloud).appendChild(o);
+  }
+  providerEl.innerHTML = "";
+  if (local.children.length) providerEl.appendChild(local);
+  if (cloud.children.length) providerEl.appendChild(cloud);
+}
+
+function updateProviderHint(d = data) {
+  const def = d?.providers?.[providerEl.value];
+  const hintEl = $("providerHint");
+  const hint = def?.hint || "";
+  hintEl.textContent = hint;
+  hintEl.hidden = !hint;
+}
 
 function applyToForm(d) {
   providerEl.value = d.provider || "ollama";
@@ -52,7 +79,7 @@ function applyToForm(d) {
   keyBackend.textContent = d.keyBackend === "os-keychain" ? "in OS keychain" : "local fallback";
   nameEl.value = d.appearance?.name || "Bobby";
   personaEl.value = d.persona || "";
-  colorEl.value = d.appearance?.color || "#BACF8D";
+  colorEl.value = d.appearance?.color || "#726FCF";
   scaleEl.value = d.appearance?.scale || 1;
   $("scaleVal").textContent = Math.round((d.appearance?.scale || 1) * 100) + "%";
   soundsEl.checked = !!d.appearance?.sounds;
@@ -63,6 +90,7 @@ function applyToForm(d) {
   dirs = [...(d.approvedDirs || [])];
   cmds = [...(d.allowCommands || [])];
   renderChips();
+  renderSwatches();
   document.documentElement.style.setProperty("--accent", colorEl.value);
 }
 
@@ -105,6 +133,7 @@ function fillChips(container, list, emptyText) {
 
 providerEl.addEventListener("change", () => {
   const def = data?.providers?.[providerEl.value];
+  updateProviderHint();
   if (!def) return;
   const oldDefaults = Object.values(data.providers).map((p) => p.baseUrl);
   const oldModels = Object.values(data.providers).map((p) => p.model);
@@ -112,8 +141,44 @@ providerEl.addEventListener("change", () => {
   if (!modelEl.value || oldModels.includes(modelEl.value)) modelEl.value = def.model;
 });
 
+/* ---------------- colour presets ---------------- */
+
+const PRESET_COLORS = [
+  { hex: "#726FCF", name: "bobby blue" },
+  { hex: "#BACF8D", name: "sage" },
+  { hex: "#6EE7C8", name: "mint" },
+  { hex: "#9BD3F0", name: "sky" },
+  { hex: "#C9B8F0", name: "lilac" },
+  { hex: "#FFD98A", name: "butter" },
+  { hex: "#FFB39B", name: "peach" },
+  { hex: "#FF9EB0", name: "coral" },
+  { hex: "#8C97AC", name: "slate" },
+];
+
+function renderSwatches() {
+  const box = $("swatches");
+  if (!box) return;
+  const current = String(colorEl.value || "").toLowerCase();
+  box.innerHTML = "";
+  for (const p of PRESET_COLORS) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch" + (current === p.hex.toLowerCase() ? " active" : "");
+    b.style.setProperty("--sw", p.hex);
+    b.title = p.name;
+    b.setAttribute("aria-label", p.name);
+    b.onclick = () => {
+      colorEl.value = p.hex;
+      colorEl.dispatchEvent(new Event("input"));
+      renderSwatches();
+    };
+    box.appendChild(b);
+  }
+}
+
 colorEl.addEventListener("input", () => {
   document.documentElement.style.setProperty("--accent", colorEl.value);
+  renderSwatches();
 });
 scaleEl.addEventListener("input", () => {
   $("scaleVal").textContent = Math.round(Number(scaleEl.value) * 100) + "%";
