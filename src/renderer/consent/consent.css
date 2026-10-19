@@ -1,5 +1,5 @@
 :root {
-  --accent: #6ee7c8;
+  --accent: #bacf8d;
   --bg: #151a26;
   --line: rgba(255, 255, 255, 0.1);
   --text: #e9eefb;
@@ -40,15 +40,26 @@ html, body {
 .head { display: flex; gap: 12px; align-items: flex-start; }
 
 .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  position: relative;
+  width: 38px;
+  height: 27px;
+  border-radius: 41% / 39%;
   flex: 0 0 auto;
-  background:
-    radial-gradient(circle at 32% 26%, rgba(255,255,255,.9), transparent 26%),
-    radial-gradient(circle at 36% 30%, color-mix(in srgb, var(--accent) 45%, white), var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, black));
-  box-shadow: inset -2px -3px 6px rgba(0,0,0,.25);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 45%, white), var(--accent));
+  box-shadow: 0 3px 6px rgba(0,0,0,.25);
 }
+.avatar::before,
+.avatar::after {
+  content: "";
+  position: absolute;
+  top: 26.6%;
+  width: 17.1%;
+  height: 19.5%;
+  border-radius: 50%;
+  background: rgba(0,0,0,.42);
+}
+.avatar::before { left: 22.4%; }
+.avatar::after { left: 50.3%; }
 
 .kicker {
   font-size: 10.5px;

@@ -1,5 +1,5 @@
 :root {
-  --accent: #6ee7c8;
+  --accent: #bacf8d;
   --bg: #10131c;
   --bg2: #171b28;
   --bg3: #1e2333;
@@ -46,14 +46,25 @@ button, input, select, textarea, .chips { -webkit-app-region: no-drag; }
   flex: 0 0 auto;
 }
 .logo {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 26%, rgba(255,255,255,.9), transparent 28%),
-    radial-gradient(circle at 36% 30%, color-mix(in srgb, var(--accent) 45%, white), var(--accent) 55%, color-mix(in srgb, var(--accent) 55%, black));
-  box-shadow: inset -2px -3px 5px rgba(0,0,0,.25);
+  position: relative;
+  width: 30px;
+  height: 21px;
+  border-radius: 41% / 39%;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 45%, white), var(--accent));
+  box-shadow: 0 2px 4px rgba(0,0,0,.25);
 }
+.logo::before,
+.logo::after {
+  content: "";
+  position: absolute;
+  top: 26.6%;
+  width: 17.1%;
+  height: 19.5%;
+  border-radius: 50%;
+  background: rgba(0,0,0,.42);
+}
+.logo::before { left: 22.4%; }
+.logo::after { left: 50.3%; }
 .titlebar .t { font-weight: 700; font-size: 14px; }
 .titlebar .s { font-size: 11px; color: var(--muted); }
 .spacer { flex: 1; }

@@ -8,9 +8,9 @@ const { BrowserWindow, screen } = require("electron");
 
 const PRELOAD = path.join(__dirname, "preload.js");
 const BASE_W = 200;
-const BASE_H = 190;
+const BASE_H = 160;
 const BALL_TOP = 26;
-const BALL_SIZE = 134;
+const BALL_SIZE = 110;
 
 const QUIPS = [
   "boop!",
@@ -338,14 +338,18 @@ class Overlay {
       this.consentWin.setBounds({ x, y, width: w, height: h });
     };
     const show = () => {
-      if (this.consentWin.isDestroyed()) return;
+      if (!this.consent || !this.consentWin || this.consentWin.isDestroyed()) return;
       place();
-      this.consentWin.webContents.send("consent:request", req);
+      this.consentWin.webContents.send("consent:request", this.consent.req);
       this.consentWin.show();
       this.consentWin.focus();
     };
-    if (this.consentWin.webContents.isLoading()) this.consentWin.webContents.once("did-finish-load", show);
+    const wc = this.consentWin.webContents;
+    if (wc.isLoading()) wc.once("did-finish-load", show);
+    else if (!wc.getURL()) wc.once("did-finish-load", show);
     else show();
+    // The renderer also pulls the pending request on boot, so this is belt and braces.
+    setTimeout(show, 400);
     this.bubble(`need your ok: ${req.summary}`, { sticky: true });
   }
 

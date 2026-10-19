@@ -10,7 +10,8 @@ const btnDeny = document.getElementById("btnDeny");
 let current = null;
 let answered = false;
 
-window.bobby.on("consent:request", (req) => {
+function applyRequest(req) {
+  if (!req) return;
   current = req;
   answered = false;
   card.classList.toggle("danger", !!req.danger);
@@ -27,11 +28,22 @@ window.bobby.on("consent:request", (req) => {
   }
   btnOnce.textContent = "Approve once";
   btnOnce.disabled = false;
+  btnAlways.disabled = false;
   btnDeny.disabled = false;
   card.style.animation = "none";
   void card.offsetWidth;
   card.style.animation = "";
-});
+}
+
+window.bobby.on("consent:request", applyRequest);
+
+// If the request was sent before this page finished loading, pull it.
+window.bobby
+  .invoke("consent:pending")
+  .then((req) => {
+    if (req && (!current || current.id !== req.id)) applyRequest(req);
+  })
+  .catch(() => {});
 
 async function answer(decision) {
   if (!current || answered) return;

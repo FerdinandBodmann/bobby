@@ -7,7 +7,7 @@ const root = document.documentElement;
 const state = {
   mood: "idle",
   name: "Bobby",
-  color: "#6EE7C8",
+  color: "#BACF8D",
   scale: 1,
   sounds: true,
 };
@@ -18,7 +18,7 @@ function hexToRgb(hex) {
   const h = String(hex || "").replace("#", "");
   const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
   const n = parseInt(full, 16);
-  if (Number.isNaN(n)) return { r: 110, g: 231, b: 200 };
+  if (Number.isNaN(n)) return { r: 186, g: 207, b: 141 };
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 const toHex = (r, g, b) =>
@@ -132,6 +132,47 @@ function sound(kind) {
 /* ---------------- interaction ---------------- */
 
 let clickTimer = null;
+let dragState = null;
+let suppressClickUntil = 0;
+
+ball.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  dragState = {
+    id: e.pointerId,
+    startX: e.screenX,
+    startY: e.screenY,
+    lastX: e.screenX,
+    lastY: e.screenY,
+    moved: false,
+  };
+  try { ball.setPointerCapture(e.pointerId); } catch {}
+});
+
+ball.addEventListener("pointermove", (e) => {
+  const d = dragState;
+  if (!d || e.pointerId !== d.id) return;
+  if (!d.moved && Math.hypot(e.screenX - d.startX, e.screenY - d.startY) > 4) {
+    d.moved = true;
+    document.body.classList.add("dragging");
+  }
+  if (!d.moved) return;
+  const dx = e.screenX - d.lastX;
+  const dy = e.screenY - d.lastY;
+  d.lastX = e.screenX;
+  d.lastY = e.screenY;
+  if (dx || dy) window.bobby.invoke("buddy:moveBy", { dx, dy });
+});
+
+function endDrag(e) {
+  const d = dragState;
+  if (!d || e.pointerId !== d.id) return;
+  dragState = null;
+  document.body.classList.remove("dragging");
+  try { ball.releasePointerCapture(e.pointerId); } catch {}
+  if (d.moved) suppressClickUntil = Date.now() + 300;
+}
+ball.addEventListener("pointerup", endDrag);
+ball.addEventListener("pointercancel", endDrag);
 
 function pokeAnim() {
   stage.classList.remove("poke");
@@ -141,6 +182,7 @@ function pokeAnim() {
 }
 
 ball.addEventListener("click", () => {
+  if (Date.now() < suppressClickUntil) return;
   if (clickTimer) return;
   clickTimer = setTimeout(async () => {
     clickTimer = null;
@@ -152,6 +194,7 @@ ball.addEventListener("click", () => {
 
 ball.addEventListener("dblclick", (e) => {
   e.preventDefault();
+  if (Date.now() < suppressClickUntil) return;
   clearTimeout(clickTimer);
   clickTimer = null;
   sound("happy");
@@ -173,7 +216,7 @@ window.bobby.on("buddy:state", (s) => {
   if (s.color) applyColor(s.color);
   if (s.scale) root.style.setProperty("--scale", String(s.scale));
   if (s.name) {
-    ball.title = `${s.name} — click to poke, double-click to chat, grab the sprout to move`;
+    ball.title = `${s.name} — drag to move, click to poke, double-click to chat`;
     document.title = s.name;
   }
   if (s.mood === "happy" && prevMood !== "happy") sound("happy");

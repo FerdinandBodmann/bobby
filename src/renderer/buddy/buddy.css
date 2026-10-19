@@ -1,10 +1,10 @@
 /* ---------- the buddy ---------- */
 
 :root {
-  --ink: #1e2a44;
-  --ball-color: #6ee7c8;
-  --ball-light: #b8f5e6;
-  --ball-dark: #35ab8f;
+  --ink: #3c4832;
+  --ball-color: #bacf8d;
+  --ball-light: #d3e0b4;
+  --ball-dark: #93a86a;
   --scale: 1;
 }
 
@@ -25,120 +25,51 @@ body { -webkit-app-region: no-drag; }
 #stage {
   position: relative;
   width: 200px;
-  height: 190px;
+  height: 160px;
   transform-origin: top center;
   transform: scale(var(--scale));
-}
-
-/* ---------- sprout (drag handle) ---------- */
-
-.dragger {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 70px;
-  height: 46px;
-  transform: translateX(-50%);
-  z-index: 6;
-  -webkit-app-region: drag;
-  cursor: grab;
-}
-.dragger:active { cursor: grabbing; }
-
-.stalk {
-  position: absolute;
-  left: 50%;
-  top: 12px;
-  width: 9px;
-  height: 26px;
-  transform: translateX(-50%);
-  border-radius: 6px;
-  background: linear-gradient(180deg, #74d8a9, #3ba97b);
-  box-shadow: inset -2px 0 2px rgba(0, 0, 0, 0.18), inset 2px 0 2px rgba(255, 255, 255, 0.3);
-}
-
-.leaf {
-  position: absolute;
-  left: 50%;
-  top: 8px;
-  width: 36px;
-  height: 18px;
-  border-radius: 60% 60% 45% 55% / 65% 65% 35% 35%;
-  background: linear-gradient(135deg, #83e2b7, #33a374);
-  transform: translateX(3px) rotate(-26deg);
-  transform-origin: -10% 70%;
-  box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.16), inset 0 3px 4px rgba(255, 255, 255, 0.25);
-  transition: transform 0.25s ease;
-}
-.dragger:hover .leaf { transform: translateX(3px) rotate(-19deg) translateY(-1px); }
-
-.leaf-shine {
-  position: absolute;
-  left: 30px;
-  top: 10px;
-  width: 12px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  transform: rotate(-30deg);
-  filter: blur(0.5px);
 }
 
 /* ---------- shadow ---------- */
 
 .shadow {
   position: absolute;
-  left: 48px;
-  top: 158px;
-  width: 104px;
-  height: 17px;
+  left: 34px;
+  top: 127px;
+  width: 132px;
+  height: 16px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0) 70%);
   filter: blur(3px);
   z-index: 1;
 }
 
-/* ---------- ball ---------- */
+/* ---------- bean body ---------- */
 
 .ball {
   position: absolute;
-  left: 33px;
+  left: 22px;
   top: 26px;
-  width: 134px;
-  height: 134px;
-  border-radius: 50%;
+  width: 156px;
+  height: 110px;
   z-index: 2;
-  background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.85) 0 4%, rgba(255, 255, 255, 0.3) 10%, transparent 27%),
-    radial-gradient(circle at 36% 30%, var(--ball-light) 0%, var(--ball-color) 46%, var(--ball-dark) 100%);
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.28),
-    inset -9px -12px 22px rgba(0, 0, 0, 0.18),
-    inset 6px 8px 16px rgba(255, 255, 255, 0.22);
-  cursor: pointer;
+  cursor: grab;
   will-change: transform;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.2));
   transition: filter 0.2s ease;
 }
-.ball:hover { filter: brightness(1.04) saturate(1.05); }
-
-.rim {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow: inset -4px -6px 14px rgba(0, 0, 0, 0.12);
-  pointer-events: none;
+.ball:active,
+body.dragging .ball { cursor: grabbing; }
+.ball:hover {
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.2)) brightness(1.04) saturate(1.04);
 }
 
-.gloss {
+.bean {
   position: absolute;
-  left: 18px;
-  top: 14px;
-  width: 44px;
-  height: 30px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 40% 40%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%);
-  transform: rotate(-24deg);
-  filter: blur(1px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -146,12 +77,7 @@ body { -webkit-app-region: no-drag; }
 
 .eyes {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 40px;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 35px;
+  inset: 0;
   z-index: 3;
   transform: translate(var(--ex, 0px), var(--ey, 0px));
   transition: transform 0.12s ease-out;
@@ -159,74 +85,56 @@ body { -webkit-app-region: no-drag; }
 }
 
 .eye {
-  position: relative;
-  width: 33px;
-  height: 42px;
+  position: absolute;
+  top: 26.6%;
+  width: 17.1%;
+  height: 19.5%;
   border-radius: 50%;
-  background: var(--ink);
-  overflow: hidden;
-  box-shadow: inset 0 -7px 12px rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.42);
   transform-origin: center;
   transition: transform 0.07s ease;
 }
-
-.eye .g1 {
-  position: absolute;
-  top: 5px;
-  right: 6px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #ffffff;
-  opacity: 0.95;
-}
-.eye .g2 {
-  position: absolute;
-  bottom: 8px;
-  left: 7px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.8);
-}
+.eye:nth-child(1) { left: 22.4%; }
+.eye:nth-child(2) { left: 50.3%; }
 
 .mouth {
   position: absolute;
   left: 50%;
-  top: 95px;
+  top: 62%;
   transform: translateX(-50%);
-  width: 32px;
-  height: 16px;
-  border: 3.5px solid var(--ink);
+  width: 26px;
+  height: 13px;
+  border: 3px solid var(--ink);
   border-top-color: transparent;
   border-left-color: transparent;
   border-right-color: transparent;
-  border-radius: 0 0 46px 46px / 0 0 30px 30px;
+  border-radius: 0 0 40px 40px / 0 0 26px 26px;
   z-index: 3;
   pointer-events: none;
-  transition: width 0.15s ease, height 0.15s ease, border-radius 0.15s ease;
+  opacity: 0;
+  transition: width 0.15s ease, height 0.15s ease, border-radius 0.15s ease, opacity 0.18s ease;
 }
 
 .blush {
   position: absolute;
-  top: 84px;
-  width: 26px;
-  height: 12px;
+  top: 58%;
+  width: 23px;
+  height: 10px;
   border-radius: 50%;
-  background: rgba(255, 116, 146, 0.55);
+  background: rgba(193, 104, 96, 0.4);
   filter: blur(2px);
-  opacity: 0.75;
+  opacity: 0;
   z-index: 2;
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
-.blush.left { left: 15px; }
-.blush.right { right: 15px; }
+.blush.left { left: 11%; }
+.blush.right { right: 11%; }
 
 .sparkle {
   position: absolute;
   top: -12px;
-  right: 4px;
+  right: 8px;
   font-size: 17px;
   color: #ffe27a;
   text-shadow: 0 0 8px rgba(255, 226, 122, 0.9);
@@ -236,7 +144,7 @@ body { -webkit-app-region: no-drag; }
   transition: opacity 0.25s ease;
 }
 .sparkle.two {
-  left: 0;
+  left: 4px;
   right: auto;
   top: 4px;
   font-size: 11px;
@@ -246,10 +154,10 @@ body { -webkit-app-region: no-drag; }
 .zzz {
   position: absolute;
   top: -6px;
-  right: -10px;
+  right: -2px;
   display: flex;
   gap: 1px;
-  color: #a9bcdf;
+  color: #8a9a72;
   font-weight: 800;
   opacity: 0;
   z-index: 4;
@@ -291,9 +199,10 @@ body { -webkit-app-region: no-drag; }
 #stage[data-mood="thinking"] .sparkle.two { animation: sparkleSpin 3.1s linear infinite reverse; }
 #stage[data-mood="thinking"] .eyes { transform: translate(3px, -4px); }
 #stage[data-mood="thinking"] .mouth {
-  width: 11px;
-  height: 12px;
-  border: 3.5px solid var(--ink);
+  opacity: 1;
+  width: 10px;
+  height: 11px;
+  border: 2.5px solid var(--ink);
   border-radius: 50%;
 }
 
@@ -310,8 +219,9 @@ body { -webkit-app-region: no-drag; }
 /* talking */
 #stage[data-mood="talking"] .ball { animation: talkJiggle 0.24s ease-in-out infinite alternate; }
 #stage[data-mood="talking"] .mouth {
-  top: 94px;
-  width: 20px;
+  opacity: 1;
+  top: 62%;
+  width: 18px;
   border: none;
   background: var(--ink);
   border-radius: 38% 38% 50% 50%;
@@ -323,16 +233,17 @@ body { -webkit-app-region: no-drag; }
   to { transform: translateY(-2.5px) rotate(1deg); }
 }
 @keyframes mouthTalk {
-  from { height: 6px; }
-  to { height: 17px; }
+  from { height: 5px; }
+  to { height: 14px; }
 }
 
 /* happy */
 #stage[data-mood="happy"] .ball { animation: happyBounce 0.72s ease-in-out 2; }
 #stage[data-mood="happy"] .shadow { animation: bobShadow 0.72s ease-in-out 2; }
 #stage[data-mood="happy"] .mouth {
-  width: 38px;
-  height: 20px;
+  opacity: 1;
+  width: 34px;
+  height: 18px;
   border-radius: 0 0 50px 50px / 0 0 34px 34px;
 }
 #stage[data-mood="happy"] .blush { opacity: 1; }
@@ -349,16 +260,17 @@ body { -webkit-app-region: no-drag; }
 /* error */
 #stage[data-mood="error"] .ball { animation: shakeX 0.45s ease-in-out 2; }
 #stage[data-mood="error"] .mouth {
-  width: 26px;
-  height: 12px;
-  border: 3.5px solid var(--ink);
+  opacity: 1;
+  width: 24px;
+  height: 10px;
+  border: 2.5px solid var(--ink);
   border-bottom-color: transparent;
   border-left-color: transparent;
   border-right-color: transparent;
   border-radius: 46px 46px 0 0 / 30px 30px 0 0;
-  top: 100px;
+  top: 64%;
 }
-#stage[data-mood="error"] .blush { opacity: 0.25; }
+#stage[data-mood="error"] .blush { opacity: 0.2; }
 
 @keyframes shakeX {
   0%, 100% { transform: translateX(0); }
@@ -371,15 +283,14 @@ body { -webkit-app-region: no-drag; }
 /* sleeping */
 #stage[data-mood="sleeping"] .ball { animation: breathe 4.2s ease-in-out infinite; }
 #stage[data-mood="sleeping"] .eye { transform: scaleY(0.1); border-radius: 40%; }
-#stage[data-mood="sleeping"] .eye .g1,
-#stage[data-mood="sleeping"] .eye .g2 { opacity: 0; }
 #stage[data-mood="sleeping"] .mouth {
-  width: 18px;
-  height: 8px;
-  border-width: 3px;
+  opacity: 0.55;
+  width: 16px;
+  height: 7px;
+  border-width: 2.5px;
 }
 #stage[data-mood="sleeping"] .zzz { opacity: 1; }
-#stage[data-mood="sleeping"] .blush { opacity: 0.5; }
+#stage[data-mood="sleeping"] .blush { opacity: 0.25; }
 
 @keyframes breathe {
   0%, 100% { transform: scale(1, 1); }
@@ -393,8 +304,8 @@ body { -webkit-app-region: no-drag; }
 #stage.poke .ball { animation: pokeSquash 0.45s cubic-bezier(0.2, 0.9, 0.3, 1); }
 @keyframes pokeSquash {
   0% { transform: scale(1, 1); }
-  35% { transform: scale(1.14, 0.84); }
-  65% { transform: scale(0.94, 1.06); }
+  35% { transform: scale(1.12, 0.86); }
+  65% { transform: scale(0.95, 1.05); }
   100% { transform: scale(1, 1); }
 }
 

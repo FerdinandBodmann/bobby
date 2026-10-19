@@ -1,56 +1,151 @@
 # bobby
-## My mental model: four parts
+
+A tiny bean who lives at the top of your screen. He looks like `art/booby.svg` (that's the
+artwork this build is based on: sage-green body, two dark oval eyes), watches your cursor with
+his eyes, blinks, bobs, and talks back through a speech bubble.
+
+He has a real brain — your API key, your choice of provider — and hands: files, shell, web,
+clipboard, volume/brightness/media, notifications, and his own memory file. Nothing he does on
+your device happens without passing a consent gate first.
 
 ```
-   ┌─────────────┐   always-on-top, click-through overlay window
-   │  1. HOME    │   placement, notch-snapping, profiles, multi-monitor
-   └──────┬──────┘
-          │
-   ┌──────▼──────┐   eyes, expressions, states (idle/thinking/talking/...)
-   │  2. FACE    │   the entire reason this project exists
-   └──────┬──────┘
-          │
-   ┌──────▼──────┐   my API key → streaming LLM → persona + memory
-   │  3. BRAIN   │   keychain storage, provider swap, local model support
-   └──────┬──────┘
-          │
-   ┌──────▼──────┐   tools: files, shell, system, apps, screenshots, web
-   │  4. HANDS   │   approve-once / always-allow / deny + kill switch + audit log
-   └─────────────┘
+npm install
+npm start
 ```
 
-The face is what you see, the brain is what it thinks with, the hands are how it changes
-anything, and the home is where it sits. Every feature in `PROMPT.md` maps to one of those.
+On first run the settings window opens: pick a provider, set a key (or leave it empty for local
+Ollama), hit **Test**, save. Then double-click Bobby to open the chat.
 
-## Decisions I made on your behalf (challenge any of them)
+---
 
-1. **Tauri over Electron** — a widget that's on screen all day shouldn't eat 300MB of RAM.
-   Electron is fine too if speed-to-working matters more.
-2. **Consent cards for every device action** — "do stuff on my device" is powerful and scary.
-   I made the permission layer first-class (approve once / always allow / deny, plus a kill
-   switch and audit log) instead of an afterthought, because an unattended agent with shell
-   access is how you lose a Downloads folder.
-3. **Click-through when idle** — the ball must never block clicks on whatever is under it,
-   otherwise it becomes annoying within a day and you'd quit the app.
-4. **Short, cheeky default persona** — a buddy on your screen, not an essay machine.
-5. **Budget guard** — runaway loops burn API keys; a daily cap is cheap insurance.
+## What's in the box
 
-## Things I deliberately did NOT decide — these need you
+```
+src/
+  main.js        app lifecycle, windows, tray, global shortcuts, IPC
+  overlay.js     the buddy window, speech bubble, consent card, placement
+  agent.js       the tool-calling loop, chat history, system prompt
+  llm.js         streaming clients: OpenAI-compatible + Anthropic
+  tools.js       every tool: schema, safety policy, implementation
+  permissions.js the consent gate — approve once / always / deny, audit log
+  config.js      settings, API key storage, audit + notes files
+  preload.js     the only bridge between windows and main
+  renderer/
+    buddy/       the bean itself: shape, moods, blink, eye tracking, sounds
+    bubble/      speech bubble (separate always-click-through window)
+    chat/        chat with streaming text and tool/consent cards
+    settings/    brain / persona / look / freedom / placement / data tabs
+    consent/     the little "Bobby needs your ok" card
+scripts/
+  cdp.js         drive the running app over the DevTools protocol (testing)
+  gen-icon.js    regenerate app + tray icons from the artwork (pure Node)
+```
 
-- **Platform + notch:** macOS (most likely, given "notch"), or do you want it cross-platform?
-  Does your display actually have a notch, or is "notch" just the vibe?
-- **Which AI provider** you want first, and whether local models (Ollama) matter to you.
-- **How much autonomy:** should it be allowed to run safe commands without asking? My default is
-  "balanced" — allowlist plus confirm everything else.
-- **"Top priority"** — if you actually meant *this build is urgent*, tell me and I'll trim the
-  scope to a walkable skeleton first (ball on screen + one API call) and layer on from there.
-- **Screen awareness:** should it be able to see my screen when I ask (screenshot tool), or is
-  that a hard no?
-- **Sound:** little blips and squeaks, or silent?
+## Using Bobby
 
-## How to use these files
+| gesture | result |
+|---|---|
+| drag the bean | move him (position is remembered, per monitor) |
+| click | poke — he reacts with a quip |
+| double-click | open the chat |
+| right-click | tray-style menu |
 
-1. Read this file, correct my misunderstandings.
-2. Hand `PROMPT.md` to a coding agent (or me) — it opens by asking you the questions from the
-   section above, then builds.
-3. The checklist at the bottom of `PROMPT.md` is "done".
+Global shortcuts (also in the tray menu):
+
+| shortcut | result |
+|---|---|
+| `Ctrl/Cmd+Alt+B` | show/hide the bean |
+| `Ctrl/Cmd+Alt+K` | kill switch — turn all tools off/on |
+| `Ctrl/Cmd+Alt+Space` | open the chat |
+
+## Providers
+
+- **Ollama (local)** — `http://localhost:11434/v1`, no key needed. `qwen2.5:0.5b` and
+  `granite4:latest` work well; tools need a model that emits real tool calls.
+- **OpenAI** — any model, key required.
+- **Anthropic** — key required, streaming tool calls supported.
+- **Custom (OpenAI-compatible)** — LM Studio, llama.cpp, vLLM, whatever.
+
+Keys are stored with Electron's `safeStorage`. If the OS keyring isn't available (common on
+minimal Wayland boxes) it falls back to base64 with a `b64:` prefix — that's obfuscation, not
+encryption. Treat `config.json` as containing a secret if you're on the fallback.
+
+## Safety model
+
+1. Every tool call goes through `permissions.execute()`. There is no other path to the device.
+2. Autonomy level decides what happens before the call:
+   - **strict** — ask for everything
+   - **balanced** (default) — the tool's own policy decides: reads of approved folders and a
+     few harmless reads run automatically, anything that writes or executes asks
+   - **loose** — auto-run everything that isn't marked dangerous
+3. "Always allow" persists the grant: a folder (`approvedDirs`), a command prefix
+   (`allowCommands`), or a whole tool (`alwaysAllowTools`).
+4. Dangerous tools (e.g. `write_file`) always ask, no matter the mode. Internet tools are
+   gated separately by **web access** in settings.
+5. Consent times out after 90s and denies. `Ctrl/Cmd+Alt+K` or the ✋ button is a hard kill
+   switch: `toolsEnabled: false` blocks everything instantly.
+6. Every decision — auto, approved, denied, failure — is written to `audit.log` with the
+   arguments, outcome and duration. Settings has a tab to read it.
+
+## Tools
+
+| group | tools | notes |
+|---|---|---|
+| files | `list_dir`, `read_file`, `write_file`, `search_files` | writes limited to approved folders unless approved once |
+| shell | `run_command` | prefix allowlisted; always asks otherwise |
+| web | `fetch_url`, `web_search`, `open_url` | search goes through DuckDuckGo lite; needs web access on |
+| system | `volume`, `brightness`, `media`, `clipboard` | Linux backends: `wpctl`, `brightnessctl`, `playerctl`, `wl-clipboard` |
+| apps | `notify`, `open_url` | `notify-send` |
+| memory | `read_notes`, `append_notes` | his own `notes.md`, always allowed |
+
+Linux is where this was built and tested. The file, shell, web and notes tools are
+cross-platform; the system tools are wired to Wayland/Linux commands and will fail cleanly
+elsewhere. Screenshot/screen-reading is deliberately not in v1.
+
+## Where things live
+
+```
+~/.config/notch-buddy/
+  config.json   settings, placement, always-allow grants, chat history, encrypted key
+  audit.log     one JSON line per tool call
+  notes.md      Bobby's own memory
+```
+
+`PROMPT.md` is the original build brief; this README describes what actually got built.
+
+## Regenerating the icons
+
+```bash
+npm run icons
+```
+
+`scripts/gen-icon.js` draws the bean from `art/booby.svg` (body proportions, eye geometry,
+palette `#BACF8D` / `#D3E0B4`, eyes at 42% black) into `assets/icon-*.png` with no image
+libraries — just zlib.
+
+## Developing / testing the running app
+
+```bash
+BOBBY_DEBUG=1 npx electron . --remote-debugging-port=9222
+node scripts/cdp.js --list                       # which windows are up
+node scripts/cdp.js buddy --eval 'document.title'
+node scripts/cdp.js buddy --shot /tmp/bobby.png  # screenshots of the overlay
+```
+
+`BOBBY_DEBUG` adds dev-only IPC: `dev:runTool` (run a tool through the real consent gate),
+`dev:setTools`, `dev:info` (window bounds, data paths).
+
+### Troubleshooting
+
+- **`npm install` finishes but `npx electron .` can't find the binary** — the Electron postinstall
+  download sometimes fails silently. Fix it manually:
+  ```bash
+  node node_modules/electron/install.js
+  unzip ~/.cache/electron/*/electron-v33.4.11-linux-x64.zip -d node_modules/electron/dist
+  printf 'electron' > node_modules/electron/path.txt
+  ```
+- **Nothing renders / transparent window is blank** — you need a compositor for the transparent,
+  always-on-top overlay. On Wayland it runs natively; on X11 make sure XWayland compositing is on.
+- **Key stored as `b64:`** — no keyring available; see the `safeStorage` note above.
+- **He never uses tools with a tiny local model** — the model has to support tool calls.
+  `granite4:latest` does; a 0.5B model may just answer in prose.

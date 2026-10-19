@@ -68,6 +68,7 @@ async function execute(name, args, ask) {
   try {
     const auth = await authorize(name, args, ask);
     decision = auth.decision;
+    if (decision === "deny") throw new Error("You didn't approve that one.");
     const result = await tool.run(args || {});
     const text = typeof result === "string" ? result : JSON.stringify(result);
     cfgmod.appendAudit({

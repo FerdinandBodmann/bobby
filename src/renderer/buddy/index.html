@@ -8,23 +8,26 @@
   </head>
   <body>
     <div id="stage" data-mood="idle">
-      <div class="dragger" id="dragger" title="drag me">
-        <div class="stalk"></div>
-        <div class="leaf"></div>
-        <div class="leaf-shine"></div>
-      </div>
-
       <div class="shadow" id="shadow"></div>
 
       <div class="ball" id="ball" title="bobby">
-        <div class="gloss"></div>
-        <div class="rim"></div>
+        <svg class="bean" viewBox="0 0 57.81424 40.635151" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="beanFill" x1="0" y1="0" x2="0.15" y2="1">
+              <stop offset="0" stop-color="var(--ball-light)" />
+              <stop offset="0.5" stop-color="var(--ball-color)" />
+              <stop offset="1" stop-color="var(--ball-color)" />
+            </linearGradient>
+          </defs>
+          <rect width="57.81424" height="40.635151" rx="23.786428" ry="15.861964" fill="url(#beanFill)" />
+        </svg>
+
         <div class="blush left"></div>
         <div class="blush right"></div>
 
         <div class="eyes" id="eyes">
-          <div class="eye"><i class="g1"></i><i class="g2"></i></div>
-          <div class="eye"><i class="g1"></i><i class="g2"></i></div>
+          <div class="eye"></div>
+          <div class="eye"></div>
         </div>
 
         <div class="mouth" id="mouth"></div>

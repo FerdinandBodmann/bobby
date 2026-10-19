@@ -338,11 +338,14 @@ function onAgentEvent(e) {
 
 /* ---------------- consent ---------------- */
 
+const consentTimers = new Map();
+
 function sendConsentRequest(req) {
   pendingConsent.set(req.id, req);
   chatSend("chat:consent", req);
   overlay.showConsent(req, (request, decision) => answerConsent(request.id, decision));
   const timer = setTimeout(() => {
+    consentTimers.delete(req.id);
     if (!pendingConsent.has(req.id)) return;
     pendingConsent.delete(req.id);
     chatSend("chat:consent-closed", { id: req.id });
@@ -350,13 +353,14 @@ function sendConsentRequest(req) {
     permissions.answer(req.id, "deny");
     overlay.bubble("no answer, so i didn't do it.", {});
   }, 90_000);
-  pendingConsent.get(req.id)._timer = timer;
+  consentTimers.set(req.id, timer);
 }
 
 function answerConsent(id, decision) {
   const req = pendingConsent.get(id);
   if (!req) return false;
-  clearTimeout(req._timer);
+  clearTimeout(consentTimers.get(id));
+  consentTimers.delete(id);
   pendingConsent.delete(id);
   if (decision === "always" && req.allow) {
     const cfg = cfgmod.get();
@@ -470,6 +474,14 @@ function wireIpc() {
     }, 1600);
     return q;
   });
+  ipcMain.handle("buddy:moveBy", (_e, { dx, dy } = {}) => {
+    const win = overlay.buddy;
+    if (!win || win.isDestroyed()) return false;
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) return false;
+    const [x, y] = win.getPosition();
+    win.setPosition(Math.round(x + dx), Math.round(y + dy));
+    return true;
+  });
   ipcMain.handle("buddy:contextMenu", () => {
     const cfg = cfgmod.get();
     Menu.buildFromTemplate([
@@ -486,7 +498,7 @@ function wireIpc() {
   });
 
   ipcMain.handle("consent:answer", (_e, { id, decision }) => answerConsent(id, decision));
-  ipcMain.handle("consent:requestFor", () => null);
+  ipcMain.handle("consent:pending", () => (overlay.consent && overlay.consent.req) || null);
 
   ipcMain.handle("settings:get", () => publicSettings());
 
@@ -577,6 +589,13 @@ function wireIpc() {
       userData: cfgmod.dir(),
       config: cfgmod.file("config.json"),
       notes: cfgmod.notesPath(),
+      buddyBounds:
+        overlay.buddy && !overlay.buddy.isDestroyed() ? overlay.buddy.getBounds() : null,
+      consentVisible: !!(
+        overlay.consentWin &&
+        !overlay.consentWin.isDestroyed() &&
+        overlay.consentWin.isVisible()
+      ),
     }));
   }
 }

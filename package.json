@@ -5,8 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "icons": "node scripts/gen-icon.js",
-    "test:mockllm": "node scripts/mock-llm.js"
+    "icons": "node scripts/gen-icon.js"
   },
   "license": "MIT",
   "devDependencies": {

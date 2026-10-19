@@ -52,7 +52,7 @@ function applyToForm(d) {
   keyBackend.textContent = d.keyBackend === "os-keychain" ? "in OS keychain" : "local fallback";
   nameEl.value = d.appearance?.name || "Bobby";
   personaEl.value = d.persona || "";
-  colorEl.value = d.appearance?.color || "#6EE7C8";
+  colorEl.value = d.appearance?.color || "#BACF8D";
   scaleEl.value = d.appearance?.scale || 1;
   $("scaleVal").textContent = Math.round((d.appearance?.scale || 1) * 100) + "%";
   soundsEl.checked = !!d.appearance?.sounds;
