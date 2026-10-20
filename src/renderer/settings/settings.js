@@ -27,8 +27,6 @@ let cmds = [];
 let apiKeyDirty = false;
 let keyValue = "";
 
-<<<<<<< HEAD
-=======
 /* The wardrobe is shared with the buddy renderer and the tray menus. */
 const WARDROBE = (window.BOBBY_COSMETICS || { COSMETICS: {}, ORDER: [], LABELS: {} });
 const COSMETICS = WARDROBE.COSMETICS;
@@ -36,7 +34,6 @@ const COSMETIC_ORDER = WARDROBE.ORDER;
 const COSMETIC_LABELS = WARDROBE.LABELS;
 let cosmetic = { id: "", cx: null, cy: null, scale: 1 };
 
->>>>>>> 28c608d (0.1)
 /* ---------------- boot ---------------- */
 
 (async function boot() {
@@ -99,10 +96,6 @@ function applyToForm(d) {
   autostartEl.checked = !!d.autostart;
   dirs = [...(d.approvedDirs || [])];
   cmds = [...(d.allowCommands || [])];
-<<<<<<< HEAD
-  renderChips();
-  renderSwatches();
-=======
   const c = d.appearance?.cosmetic || {};
   // Keep any hand-placed position; the picker only ever changes which one he wears.
   cosmetic = {
@@ -115,7 +108,6 @@ function applyToForm(d) {
   renderSwatches();
   renderLooks();
   setWearHint(false);
->>>>>>> 28c608d (0.1)
   document.documentElement.style.setProperty("--accent", colorEl.value);
 }
 
@@ -201,8 +193,6 @@ function renderSwatches() {
   }
 }
 
-<<<<<<< HEAD
-=======
 /* ---------------- what he wears ---------------- */
 
 const WEAR_DEFAULT_HINT = "— click one and he tries it on right away";
@@ -266,7 +256,6 @@ function renderLooks() {
   }
 }
 
->>>>>>> 28c608d (0.1)
 colorEl.addEventListener("input", () => {
   document.documentElement.style.setProperty("--accent", colorEl.value);
   renderSwatches();
@@ -388,11 +377,8 @@ $("btnSave").onclick = async () => {
         color: colorEl.value,
         scale: Number(scaleEl.value),
         sounds: soundsEl.checked,
-<<<<<<< HEAD
-=======
         // Keep cx/cy so a hand-placed cosmetic isn't reset by saving.
         cosmetic: { ...cosmetic, scale: cosmetic.scale || 1 },
->>>>>>> 28c608d (0.1)
       },
     };
     if (apiKeyDirty) patch.apiKey = keyValue;

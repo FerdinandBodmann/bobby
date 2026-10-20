@@ -35,11 +35,8 @@ src/
   permissions.js the consent gate — approve once / always / deny, audit log
   config.js      settings, API key storage, audit + notes files
   preload.js     the only bridge between windows and main
-<<<<<<< HEAD
-=======
   shared/
     cosmetics.js the wardrobe: every cosmetic's SVG and where it sits on the bean
->>>>>>> 28c608d (0.1)
   renderer/
     buddy/       the bean itself: shape, moods, blink, eye tracking, sounds
     bubble/      speech bubble (separate always-click-through window)
@@ -48,10 +45,7 @@ src/
     consent/     the little "Bobby needs your ok" card
 scripts/
   cdp.js         drive the running app over the DevTools protocol (testing)
-<<<<<<< HEAD
-=======
   trigger.js     poke a running instance: looks, moods, naps (testing)
->>>>>>> 28c608d (0.1)
   gen-icon.js    regenerate app + tray icons from the artwork (pure Node)
 ```
 
@@ -72,8 +66,6 @@ Global shortcuts (also in the tray menu):
 | `Ctrl/Cmd+Alt+K` | kill switch — turn all tools off/on |
 | `Ctrl/Cmd+Alt+Space` | open the chat |
 
-<<<<<<< HEAD
-=======
 ## Where he sits
 
 Drag him anywhere and he remembers, per monitor. If you'd rather he wasn't taking up
@@ -94,7 +86,6 @@ to the bean by fractions of his own box — `cx`/`cy` (0.5, 0.13 = top-middle) a
 `size` that's a fraction of his height — so it scales and stays put at every size,
 mood and colour. One decoration at a time, and the default is nothing.
 
->>>>>>> 28c608d (0.1)
 ## Providers
 
 - **Ollama (local)** — `http://localhost:11434/v1`, no key needed. `qwen2.5:0.5b` and
@@ -157,14 +148,11 @@ elsewhere. Screenshot/screen-reading is deliberately not in v1.
   notes.md      Bobby's own memory
 ```
 
-<<<<<<< HEAD
-=======
 `main.js` pins this path explicitly (`app.setPath("userData", …)`) rather than letting
 Electron derive it from the app name. Packaging renames the app, and without the pin a
 packaged build would come up as a blank first-run profile with your provider, key, chat
 and reminders all missing.
 
->>>>>>> 28c608d (0.1)
 `PROMPT.md` is the original build brief; this README describes what actually got built.
 
 ## Regenerating the icons
@@ -177,8 +165,6 @@ npm run icons
 palette `#9797B4` → `#726FCF` → `#4C47EA`, eyes at 42% black) into `assets/icon-*.png` with no image
 libraries — just zlib.
 
-<<<<<<< HEAD
-=======
 ## Building an app you can double-click
 
 ```bash
@@ -229,7 +215,6 @@ BOBBY_USER_DATA=/tmp/bobby-test ./dist/Bobby-0.1.0-x86_64.AppImage
 An explicitly requested profile also gets its own single-instance lock, so a test
 instance can run alongside the real one.
 
->>>>>>> 28c608d (0.1)
 ## Developing / testing the running app
 
 ```bash
@@ -240,9 +225,6 @@ node scripts/cdp.js buddy --shot /tmp/bobby.png  # screenshots of the overlay
 ```
 
 `BOBBY_DEBUG` adds dev-only IPC: `dev:runTool` (run a tool through the real consent gate),
-<<<<<<< HEAD
-`dev:setTools`, `dev:info` (window bounds, data paths).
-=======
 `dev:setTools`, `dev:info` (window bounds, data paths), `dev:trigger` (looks, moods, naps).
 
 ### Poking his looks, moods and naps from the shell
@@ -267,7 +249,6 @@ of a run is remembered, so `restore` puts your old look back (or fix it in Setti
 `nap <seconds>` shortens his real nap clock so you can watch him doze off through the genuine
 "left alone" path (he has to be visible and idle); `nap off` puts the five-minute delay back.
 Run `node scripts/trigger.js --help` for everything, with examples.
->>>>>>> 28c608d (0.1)
 
 ### Troubleshooting
 

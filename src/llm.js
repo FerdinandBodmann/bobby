@@ -227,12 +227,6 @@ async function anthropicChat({ baseUrl, model, apiKey, messages, tools, signal, 
   return { text, toolCalls };
 }
 
-<<<<<<< HEAD
-/* ---------------- public API ---------------- */
-
-async function streamChat(opts) {
-  const f = opts.kind === "anthropic" ? anthropicChat : openaiChat;
-=======
 /* ---------------- Perplexity Agent API (OpenAI Responses format) ---------------- */
 
 function toResponsesInput(messages) {
@@ -337,7 +331,6 @@ async function responsesChat({ baseUrl, model, apiKey, messages, tools, signal, 
 async function streamChat(opts) {
   const f =
     opts.kind === "anthropic" ? anthropicChat : opts.kind === "responses" ? responsesChat : openaiChat;
->>>>>>> 28c608d (0.1)
   return f(opts);
 }
 

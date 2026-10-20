@@ -9,16 +9,11 @@ const permissions = require("./permissions");
 const reminders = require("./reminders");
 const { Agent } = require("./agent");
 const { Overlay, PEEK } = require("./overlay");
-<<<<<<< HEAD
-=======
 const WARDROBE = require("./shared/cosmetics");
->>>>>>> 28c608d (0.1)
 
 app.commandLine.appendSwitch("enable-transparent-visuals");
 app.commandLine.appendSwitch("ozone-platform-hint", "auto");
 
-<<<<<<< HEAD
-=======
 // One config, however you launch him. Electron derives userData from the app
 // name, and packaging renames the app (notch-buddy -> Bobby), which would
 // otherwise hand a packaged build a blank first-run profile and lose the
@@ -36,7 +31,6 @@ try {
   console.warn("could not pin userData:", e.message);
 }
 
->>>>>>> 28c608d (0.1)
 const ASSETS = path.join(__dirname, "..", "assets");
 const PRELOAD = path.join(__dirname, "preload.js");
 const GLOBAL_TOGGLE_BUDDY = "CommandOrControl+Alt+B";
@@ -204,9 +198,6 @@ function openSettings() {
   settingsWin.loadFile(path.join(__dirname, "renderer", "settings", "index.html"));
   watchWindow(settingsWin, "settings");
   settingsWin.once("ready-to-show", () => settingsWin.show());
-<<<<<<< HEAD
-  settingsWin.on("closed", () => (settingsWin = null));
-=======
   settingsWin.on("closed", () => {
     settingsWin = null;
     // Drop any unsaved try-on and go back to what he actually wears.
@@ -246,7 +237,6 @@ function cosmeticMenu() {
       click: () => wearCosmetic(id),
     })),
   };
->>>>>>> 28c608d (0.1)
 }
 
 /* ---------------- tray + shortcuts ---------------- */
@@ -282,10 +272,7 @@ function refreshTrayMenu() {
       checked: overlay.visible,
       click: () => overlay.toggleVisible(),
     },
-<<<<<<< HEAD
-=======
     cosmeticMenu(),
->>>>>>> 28c608d (0.1)
     { label: "Reset buddy position", click: () => overlay.resetPosition() },
     { type: "separator" },
     { label: "Quit Bobby", click: () => app.quit() },
@@ -317,8 +304,6 @@ function toggleTools() {
   return next;
 }
 
-<<<<<<< HEAD
-=======
 /** A poke: one quip, one happy bounce, then back to idle. */
 function pokeBuddy() {
   const q = overlay.quip();
@@ -330,7 +315,6 @@ function pokeBuddy() {
   return q;
 }
 
->>>>>>> 28c608d (0.1)
 function applyAutostart(enabled) {
   try {
     app.setLoginItemSettings({ openAtLogin: !!enabled, openAsHidden: true });
@@ -583,19 +567,7 @@ function wireIpc() {
   });
   ipcMain.handle("chat:history", () => agent.view());
 
-<<<<<<< HEAD
-  ipcMain.handle("buddy:poke", () => {
-    const q = overlay.quip();
-    overlay.bubble(q, {});
-    overlay.setMood("happy");
-    setTimeout(() => {
-      if (!agent?.busy) overlay.setMood("idle");
-    }, 1600);
-    return q;
-  });
-=======
   ipcMain.handle("buddy:poke", () => pokeBuddy());
->>>>>>> 28c608d (0.1)
   ipcMain.handle("buddy:wake", () => {
     overlay.wake();
     return overlay.mood;
@@ -647,10 +619,7 @@ function wireIpc() {
         checked: cfg.placement?.mode === "top",
         click: () => (cfg.placement?.mode === "top" ? overlay.undock() : overlay.dockToTop()),
       },
-<<<<<<< HEAD
-=======
       cosmeticMenu(),
->>>>>>> 28c608d (0.1)
       { label: "Reset position", click: () => overlay.resetPosition() },
       { type: "separator" },
       { label: "Quit", click: () => app.quit() },
@@ -663,15 +632,12 @@ function wireIpc() {
 
   ipcMain.handle("settings:get", () => publicSettings());
 
-<<<<<<< HEAD
-=======
   // Try a cosmetic on without saving it — the settings picker's live preview.
   ipcMain.handle("appearance:preview", (_e, { cosmetic } = {}) => {
     overlay.previewCosmetic(cosmetic);
     return true;
   });
 
->>>>>>> 28c608d (0.1)
   ipcMain.handle("settings:save", (_e, patch) => {
     const clean = { ...patch };
     if ("apiKey" in clean) {
@@ -789,8 +755,6 @@ function wireIpc() {
         overlay.consentWin.isVisible()
       ),
     }));
-<<<<<<< HEAD
-=======
     // Change what he looks like, put him to sleep, make him say things — the
     // live-testing entry point that scripts/trigger.js drives over CDP:
     //   window.bobby.invoke("dev:trigger", [{ t: "look", color: "#E4A24C" }, …])
@@ -894,7 +858,6 @@ function wireIpc() {
         appearance: cfgmod.get().appearance,
       };
     });
->>>>>>> 28c608d (0.1)
     // Screenshot the buddy (or bubble/chat) for design review. `mood`, `scale`
     // and `cosmetic` temporarily override appearance so one run can capture a
     // whole contact sheet.
@@ -912,16 +875,12 @@ function wireIpc() {
         restoreAppearance = structuredClone(cur);
         const next = { ...cur };
         if (scale != null) next.scale = scale;
-<<<<<<< HEAD
-        if (cosmetic != null) next.cosmetic = cosmetic;
-=======
         if (cosmetic != null) {
           next.cosmetic =
             typeof cosmetic === "string"
               ? { id: cosmetic === "none" ? "" : cosmetic, cx: null, cy: null, scale: 1 }
               : cosmetic;
         }
->>>>>>> 28c608d (0.1)
         cfgmod.update({ appearance: next });
         overlay.applyAppearance();
         applied.push("appearance");

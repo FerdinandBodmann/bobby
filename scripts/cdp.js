@@ -9,12 +9,8 @@
 const fs = require("fs");
 
 async function targets() {
-<<<<<<< HEAD
-  const res = await fetch("http://127.0.0.1:9222/json/list");
-=======
   const port = process.env.BOBBY_CDP_PORT || "9222";
   const res = await fetch(`http://127.0.0.1:${port}/json/list`);
->>>>>>> 28c608d (0.1)
   return res.json();
 }
 
@@ -102,12 +98,6 @@ async function main() {
   }
 }
 
-<<<<<<< HEAD
-main().catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
-=======
 module.exports = { targets, connect };
 
 if (require.main === module) {
@@ -116,4 +106,3 @@ if (require.main === module) {
     process.exitCode = 1;
   });
 }
->>>>>>> 28c608d (0.1)

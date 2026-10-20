@@ -1,11 +1,7 @@
 ---
 description: Reviews and refines Bobby's visual design by actually looking at rendered PNGs of the buddy (bean shape, face, cosmetics, colours, bubble). Use when the look needs judging or a cosmetic/asset needs to be made to fit.
 mode: all
-<<<<<<< HEAD
-model: opencode/gemini-3.8-flash
-=======
 model: opencode/nemotron-3.5-super-vl-free
->>>>>>> 28c608d (0.1)
 color: "#726FCF"
 permissions:
   - action: edit
@@ -15,21 +11,14 @@ permissions:
     resource: "src/renderer/buddy/**"
     effect: allow
   - action: edit
-<<<<<<< HEAD
-=======
     resource: "src/shared/cosmetics.js"
     effect: allow
   - action: edit
->>>>>>> 28c608d (0.1)
     resource: "art/**"
     effect: allow
   - action: shell
     resource: "*"
-<<<<<<< HEAD
-    effect: ask
-=======
     effect: deny
->>>>>>> 28c608d (0.1)
   - action: shell
     resource: "node scripts/design-render.js*"
     effect: allow
@@ -93,12 +82,6 @@ The design language is load-bearing. Match it; do not redesign it.
   unscaled 200×160 space** — `#stage`'s `transform: scale(var(--scale))` does the
   sizing, so never multiply geometry by scale yourself.
 - Design box: stage 200×160, bean at `left 50% / top 26px / 156×110`.
-<<<<<<< HEAD
-- Cosmetics live in the `COSMETICS` map in `buddy.js`: plain inline SVG strings
-  pinned to the bean by a fraction of the bean box (`cx`, `cy`) with `size` as a
-  fraction of the bean height. They must survive every `--scale` and every mood,
-  never cover the eyes, and read at 110px tall.
-=======
 - Cosmetics live in the `COSMETICS` map in `src/shared/cosmetics.js` (shared with
   the settings picker and the tray menus, so never inline them anywhere else):
   plain inline SVG strings pinned to the bean by a fraction of the bean box
@@ -108,7 +91,6 @@ The design language is load-bearing. Match it; do not redesign it.
   usually better here — a decoration that is barely visible is not decoration.
   Each entry also carries a `label`; keep labels in sync with the `LABELS` map
   at the bottom of the same file.
->>>>>>> 28c608d (0.1)
 - The speech bubble is a separate window (`src/renderer/bubble/`) with a tail
   aimed at the bean; the pill is dark (`rgba(21,25,38,.96)`), 13.5px text.
 
@@ -118,12 +100,8 @@ The design language is load-bearing. Match it; do not redesign it.
   purpose. Never reintroduce it, in any cosmetic, under any name.
 - Do not touch `src/main.js`, `src/config.js`, `src/overlay.js`, `src/agent.js`,
   `src/tools.js` or anything under `src/renderer/chat|settings|consent`. You are
-<<<<<<< HEAD
-  the art reviewer; geometry and behaviour belong to someone else.
-=======
   the art reviewer; geometry and behaviour belong to someone else. `src/shared/cosmetics.js`
   is yours: the cosmetic artwork and its placement fractions only.
->>>>>>> 28c608d (0.1)
 - Never write to the user's live config (`~/.config/notch-buddy/config.json`).
 - A cosmetic must default to nothing. Silence is the default look; decoration is
   opt-in.

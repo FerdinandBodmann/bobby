@@ -3,18 +3,6 @@
   "version": "0.1.0",
   "description": "A cute little ball that lives at the top of your screen, with an LLM brain and hands on your device.",
   "main": "src/main.js",
-<<<<<<< HEAD
-  "scripts": {
-    "start": "electron .",
-    "icons": "node scripts/gen-icon.js"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "electron": "^33.0.0"
-  },
-  "allowScripts": {
-    "electron@33.4.11": true
-=======
   "author": {
     "name": "Ferdinand B",
     "email": "ferdinandbodmann@gmail.com"
@@ -71,6 +59,5 @@
         "xdg-utils"
       ]
     }
->>>>>>> 28c608d (0.1)
   }
 }

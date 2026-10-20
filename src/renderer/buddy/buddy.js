@@ -172,77 +172,12 @@ window.buddyInfo = function buddyInfo() {
 };
 
 /* ---------------- cosmetics ----------------
-<<<<<<< HEAD
-   One little decoration worn on the bean. Each entry is plain SVG so it stays
-   crisp at any size, and `size` is a fraction of the bean's height. */
-
-const COSMETICS = {
-  none: null,
-  bow: {
-    size: 0.30,
-    svg:
-      '<svg viewBox="0 0 56 34" fill="none">' +
-      '<path d="M27 17 L6 5 C0 14 0 22 6 29 Z" fill="#e57aa6" stroke="#a8406a" stroke-width="2.4" stroke-linejoin="round"/>' +
-      '<path d="M29 17 L50 5 C56 14 56 22 50 29 Z" fill="#e57aa6" stroke="#a8406a" stroke-width="2.4" stroke-linejoin="round"/>' +
-      '<circle cx="28" cy="17" r="6.4" fill="#f7a8c6" stroke="#a8406a" stroke-width="2.4"/>' +
-      "</svg>",
-  },
-  party: {
-    size: 0.44,
-    svg:
-      '<svg viewBox="0 0 40 52" fill="none">' +
-      '<path d="M20 6 L2 48 L38 48 Z" fill="#7f7bdc" stroke="#4c47ea" stroke-width="3" stroke-linejoin="round"/>' +
-      '<path d="M20 6 L11 27 L29 27 Z" fill="#b9b6ff" opacity="0.9"/>' +
-      '<circle cx="20" cy="3.4" r="3.4" fill="#ffd76a"/>' +
-      "</svg>",
-  },
-  cap: {
-    size: 0.42,
-    svg:
-      '<svg viewBox="0 0 60 34" fill="none">' +
-      '<path d="M4 30 C4 14 15 4 30 4 C45 4 56 14 56 30 Z" fill="#3b4a86" stroke="#22305f" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<path d="M54 28 C66 28 66 34 54 34 Z" fill="#22305f"/>' +
-      '<circle cx="30" cy="6" r="3" fill="#e7e9ff"/>' +
-      "</svg>",
-  },
-  flower: {
-    size: 0.28,
-    svg:
-      '<svg viewBox="0 0 40 40" fill="none">' +
-      '<g fill="#f3a2c4" stroke="#c46a92" stroke-width="2">' +
-      '<circle cx="20" cy="8" r="7"/><circle cx="32" cy="20" r="7"/>' +
-      '<circle cx="20" cy="32" r="7"/><circle cx="8" cy="20" r="7"/>' +
-      "</g>" +
-      '<circle cx="20" cy="20" r="6" fill="#ffd76a" stroke="#d09b2c" stroke-width="2"/>' +
-      "</svg>",
-  },
-  boba: {
-    size: 0.26,
-    svg:
-      '<svg viewBox="0 0 34 46" fill="none">' +
-      '<path d="M6 12 L28 12 L24 44 L10 44 Z" fill="#efe3cf" stroke="#7a6a55" stroke-width="2.4" stroke-linejoin="round"/>' +
-      '<path d="M8 26 L26 26 L24 44 L10 44 Z" fill="#b98a5e"/>' +
-      '<circle cx="14" cy="34" r="2.6" fill="#3a2a1e"/><circle cx="21" cy="37" r="2.6" fill="#3a2a1e"/>' +
-      '<circle cx="17" cy="30" r="2.2" fill="#3a2a1e"/>' +
-      '<rect x="18" y="0" width="3" height="14" rx="1.5" fill="#7a6a55" transform="rotate(9 19 7)"/>' +
-      "</svg>",
-  },
-  star: {
-    size: 0.30,
-    svg:
-      '<svg viewBox="0 0 40 40" fill="none">' +
-      '<path d="M20 3 L25 15 L38 16 L28 25 L31 38 L20 31 L9 38 L12 25 L2 16 L15 15 Z" fill="#ffd76a" stroke="#d09b2c" stroke-width="2.4" stroke-linejoin="round"/>' +
-      "</svg>",
-  },
-};
-=======
    One little decoration worn on the bean. The wardrobe itself lives in
    src/shared/cosmetics.js (loaded before this file) so the settings preview and
    the tray menus describe exactly the same thing. Each entry is plain SVG, and
    `size` is a fraction of the bean's height. */
 
 const COSMETICS = (window.BOBBY_COSMETICS && window.BOBBY_COSMETICS.COSMETICS) || {};
->>>>>>> 28c608d (0.1)
 
 function paintCosmetic() {
   const c = state.cosmetic || {};
@@ -256,13 +191,8 @@ function paintCosmetic() {
   const px = Math.round(110 * def.size * (Number(c.scale) || 1));
   cosmeticEl.style.width = px + "px";
   cosmeticEl.style.height = px + "px";
-<<<<<<< HEAD
-  cosmeticEl.style.left = Math.round(156 * (c.cx ?? 0.5)) + "px";
-  cosmeticEl.style.top = Math.round(110 * (c.cy ?? 0.8)) + "px";
-=======
   cosmeticEl.style.left = Math.round(156 * (c.cx ?? def.cx ?? 0.5)) + "px";
   cosmeticEl.style.top = Math.round(110 * (c.cy ?? def.cy ?? 0.8)) + "px";
->>>>>>> 28c608d (0.1)
   cosmeticEl.innerHTML = def.svg;
   cosmeticEl.classList.add("on");
 }
@@ -402,13 +332,6 @@ window.bobby.on("buddy:state", (s) => {
     state.cosmetic = s.cosmetic && typeof s.cosmetic === "object" ? s.cosmetic : null;
     paintCosmetic();
   }
-<<<<<<< HEAD
-  if (s.cosmetic !== undefined) {
-    state.cosmetic = s.cosmetic && typeof s.cosmetic === "object" ? s.cosmetic : null;
-    paintCosmetic();
-  }
-=======
->>>>>>> 28c608d (0.1)
   if (s.name) {
     ball.title = `${s.name} — drag to move, click to poke, double-click to chat`;
     document.title = s.name;

@@ -31,19 +31,11 @@ const SHEET = arg("sheet", "all");
 const ZOOM = Number(arg("zoom", 2));
 
 const MOODS = ["idle", "thinking", "talking", "happy", "error", "sleeping"];
-<<<<<<< HEAD
-const COSMETICS = ["none", "bow", "party", "cap", "flower", "boba", "star"];
-const PALETTE = ["#726FCF", "#5FB89A", "#E4A24C", "#E0708F", "#4C8FE4", "#BACF8D"];
-
-// Where each cosmetic sits on the bean when we render the "worn" shot.
-const WEAR = { cx: 0.5, cy: 0.16, scale: 1 };
-=======
 const COSMETICS = ["none", ...require("../src/shared/cosmetics").ORDER];
 const PALETTE = ["#726FCF", "#5FB89A", "#E4A24C", "#E0708F", "#4C8FE4", "#BACF8D"];
 
 // Let each cosmetic use its own default spot, exactly like the real bean does.
 const WEAR = { scale: 1 };
->>>>>>> 28c608d (0.1)
 
 function label(text) {
   return `<div class="cap">${text}</div>`;
@@ -80,8 +72,6 @@ async function save(img, file) {
 /** Stack images vertically onto a strip with captions, using an offscreen page. */
 async function strip(items, file, { cols = 3, cell = 260 } = {}) {
   const rows = Math.ceil(items.length / cols);
-<<<<<<< HEAD
-=======
   // Inline the PNGs as data URLs: a page loaded from a data: URL has an opaque
   // origin and silently refuses to load file:// images, which is why the
   // thumbnails used to come out as broken placeholders.
@@ -89,7 +79,6 @@ async function strip(items, file, { cols = 3, cell = 260 } = {}) {
     caption: it.caption,
     src: "data:image/png;base64," + fs.readFileSync(it.file).toString("base64"),
   }));
->>>>>>> 28c608d (0.1)
   const html = `<!doctype html><meta charset="utf-8"><style>
     body { margin:0; background:#20243a; font-family:system-ui,sans-serif; color:#cfd6ea;
       display:grid; grid-template-columns: repeat(${cols}, ${cell}px); }
@@ -98,16 +87,8 @@ async function strip(items, file, { cols = 3, cell = 260 } = {}) {
       background:#141726; border-radius:10px; }
     .cap { font-size:12px; letter-spacing:.03em; margin-top:6px; opacity:.75; }
   </style>` +
-<<<<<<< HEAD
-    items
-      .map(
-        (it) =>
-          `<figure><img src="${"file://" + it.file}">${label(it.caption)}</figure>`
-      )
-=======
     thumbs
       .map((it) => `<figure><img src="${it.src}">${label(it.caption)}</figure>`)
->>>>>>> 28c608d (0.1)
       .join("");
   const w = new BrowserWindow({
     width: cols * cell,
