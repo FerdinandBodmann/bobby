@@ -6,3 +6,4 @@ target/
 .env*
 !.env.example
 PROMPT.md
+.opencode/
