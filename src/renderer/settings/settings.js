@@ -27,6 +27,16 @@ let cmds = [];
 let apiKeyDirty = false;
 let keyValue = "";
 
+<<<<<<< HEAD
+=======
+/* The wardrobe is shared with the buddy renderer and the tray menus. */
+const WARDROBE = (window.BOBBY_COSMETICS || { COSMETICS: {}, ORDER: [], LABELS: {} });
+const COSMETICS = WARDROBE.COSMETICS;
+const COSMETIC_ORDER = WARDROBE.ORDER;
+const COSMETIC_LABELS = WARDROBE.LABELS;
+let cosmetic = { id: "", cx: null, cy: null, scale: 1 };
+
+>>>>>>> 28c608d (0.1)
 /* ---------------- boot ---------------- */
 
 (async function boot() {
@@ -89,8 +99,23 @@ function applyToForm(d) {
   autostartEl.checked = !!d.autostart;
   dirs = [...(d.approvedDirs || [])];
   cmds = [...(d.allowCommands || [])];
+<<<<<<< HEAD
   renderChips();
   renderSwatches();
+=======
+  const c = d.appearance?.cosmetic || {};
+  // Keep any hand-placed position; the picker only ever changes which one he wears.
+  cosmetic = {
+    id: typeof c.id === "string" ? c.id : "",
+    cx: c.cx ?? null,
+    cy: c.cy ?? null,
+    scale: Number(c.scale) || 1,
+  };
+  renderChips();
+  renderSwatches();
+  renderLooks();
+  setWearHint(false);
+>>>>>>> 28c608d (0.1)
   document.documentElement.style.setProperty("--accent", colorEl.value);
 }
 
@@ -176,6 +201,72 @@ function renderSwatches() {
   }
 }
 
+<<<<<<< HEAD
+=======
+/* ---------------- what he wears ---------------- */
+
+const WEAR_DEFAULT_HINT = "— click one and he tries it on right away";
+
+function setWearHint(pending) {
+  const el = $("wearHint");
+  if (!el) return;
+  el.textContent = pending ? "— he's trying it on. press Save to keep it" : WEAR_DEFAULT_HINT;
+}
+
+function renderLooks() {
+  const box = $("looks");
+  if (!box) return;
+  box.innerHTML = "";
+  for (const id of ["", ...COSMETIC_ORDER]) {
+    const def = id ? COSMETICS[id] : null;
+    if (id && !def) continue;
+
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "look" + (cosmetic.id === id ? " active" : "");
+    card.title = id ? `let him wear the ${COSMETIC_LABELS[id] || id}` : "wear nothing";
+    card.setAttribute("aria-pressed", String(cosmetic.id === id));
+
+    const mini = document.createElement("div");
+    mini.className = "mini";
+    const inner = document.createElement("div");
+    inner.className = "miniinner";
+    const bean = document.createElement("div");
+    bean.className = "miniball";
+    inner.appendChild(bean);
+
+    if (def) {
+      // Same placement maths as the real bean: 156x110 design box, cx/cy fractions
+      // relative to the bean itself (the slot lives inside .ball on the buddy too).
+      const span = Math.round(110 * def.size);
+      const deco = document.createElement("div");
+      deco.className = "minicosmetic";
+      deco.style.width = span + "px";
+      deco.style.height = span + "px";
+      deco.style.left = Math.round(156 * (def.cx ?? 0.5)) + "px";
+      deco.style.top = Math.round(110 * (def.cy ?? 0.8)) + "px";
+      deco.innerHTML = def.svg;
+      bean.appendChild(deco);
+    }
+    mini.appendChild(inner);
+
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = COSMETIC_LABELS[id] || id || "nothing";
+
+    card.append(mini, name);
+    card.onclick = () => {
+      cosmetic.id = id;
+      renderLooks();
+      setWearHint(true);
+      // Show it on the real bean straight away — not saved until you press Save.
+      window.bobby.invoke("appearance:preview", { cosmetic: id ? { ...cosmetic } : null }).catch(() => {});
+    };
+    box.appendChild(card);
+  }
+}
+
+>>>>>>> 28c608d (0.1)
 colorEl.addEventListener("input", () => {
   document.documentElement.style.setProperty("--accent", colorEl.value);
   renderSwatches();
@@ -297,6 +388,11 @@ $("btnSave").onclick = async () => {
         color: colorEl.value,
         scale: Number(scaleEl.value),
         sounds: soundsEl.checked,
+<<<<<<< HEAD
+=======
+        // Keep cx/cy so a hand-placed cosmetic isn't reset by saving.
+        cosmetic: { ...cosmetic, scale: cosmetic.scale || 1 },
+>>>>>>> 28c608d (0.1)
       },
     };
     if (apiKeyDirty) patch.apiKey = keyValue;

@@ -191,6 +191,95 @@ select { cursor: pointer; }
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--sw) 65%, transparent);
 }
 
+<<<<<<< HEAD
+=======
+/* look picker */
+
+.looks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+.look {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 92px;
+  padding: 8px 6px 6px;
+  border-radius: 12px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.look:hover { border-color: rgba(255, 255, 255, 0.2); }
+.look.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg2));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.look .name {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.look.active .name { color: var(--text); }
+
+/* a tiny bean, in the same 200x160 design space as the real stage, scaled to fit */
+.mini {
+  position: relative;
+  width: 84px;
+  height: 67px;
+  pointer-events: none;
+}
+.mini .miniinner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 200px;
+  height: 160px;
+  transform: scale(0.42);
+  transform-origin: top left;
+}
+.mini .miniball {
+  position: absolute;
+  left: 22px;
+  top: 26px;
+  width: 156px;
+  height: 110px;
+  border-radius: 46px;
+  background: linear-gradient(
+    176deg,
+    color-mix(in srgb, var(--accent) 42%, white),
+    var(--accent) 52%,
+    color-mix(in srgb, var(--accent) 76%, black)
+  );
+  box-shadow: 0 6px 9px rgba(0, 0, 0, 0.25);
+}
+.mini .miniball::before,
+.mini .miniball::after {
+  content: "";
+  position: absolute;
+  top: 26.6%;
+  width: 17.1%;
+  height: 19.5%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  z-index: 1;
+}
+.mini .miniball::before { left: 22.4%; }
+.mini .miniball::after { left: 50.3%; }
+.mini .minicosmetic {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+.mini .minicosmetic svg { display: block; width: 100%; height: 100%; }
+
+>>>>>>> 28c608d (0.1)
 .withbtn { display: flex; gap: 8px; }
 .withbtn input { flex: 1; }
 

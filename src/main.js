@@ -9,10 +9,34 @@ const permissions = require("./permissions");
 const reminders = require("./reminders");
 const { Agent } = require("./agent");
 const { Overlay, PEEK } = require("./overlay");
+<<<<<<< HEAD
+=======
+const WARDROBE = require("./shared/cosmetics");
+>>>>>>> 28c608d (0.1)
 
 app.commandLine.appendSwitch("enable-transparent-visuals");
 app.commandLine.appendSwitch("ozone-platform-hint", "auto");
 
+<<<<<<< HEAD
+=======
+// One config, however you launch him. Electron derives userData from the app
+// name, and packaging renames the app (notch-buddy -> Bobby), which would
+// otherwise hand a packaged build a blank first-run profile and lose the
+// provider, key, chat and reminders. Pin it to a fixed folder instead — but
+// never over a path the caller asked for, so --user-data-dir and
+// BOBBY_USER_DATA still get an isolated profile for testing.
+try {
+  const asked = process.env.BOBBY_USER_DATA
+    ? path.resolve(process.env.BOBBY_USER_DATA)
+    : process.argv.some((a) => a.startsWith("--user-data-dir"))
+      ? null // Electron already honoured the switch; leave it alone
+      : path.join(app.getPath("appData"), "notch-buddy");
+  if (asked) app.setPath("userData", asked);
+} catch (e) {
+  console.warn("could not pin userData:", e.message);
+}
+
+>>>>>>> 28c608d (0.1)
 const ASSETS = path.join(__dirname, "..", "assets");
 const PRELOAD = path.join(__dirname, "preload.js");
 const GLOBAL_TOGGLE_BUDDY = "CommandOrControl+Alt+B";
@@ -180,7 +204,49 @@ function openSettings() {
   settingsWin.loadFile(path.join(__dirname, "renderer", "settings", "index.html"));
   watchWindow(settingsWin, "settings");
   settingsWin.once("ready-to-show", () => settingsWin.show());
+<<<<<<< HEAD
   settingsWin.on("closed", () => (settingsWin = null));
+=======
+  settingsWin.on("closed", () => {
+    settingsWin = null;
+    // Drop any unsaved try-on and go back to what he actually wears.
+    overlay.applyCosmetic();
+  });
+}
+
+/* ---------------- wardrobe (one-click from the menus) ---------------- */
+
+function currentCosmeticId() {
+  return String(cfgmod.get().appearance?.cosmetic?.id || "");
+}
+
+/** Put a piece on (or take it off) for real — this one is saved. */
+function wearCosmetic(id) {
+  const cur = cfgmod.get().appearance?.cosmetic || {};
+  cfgmod.update({ appearance: { cosmetic: { ...cur, id: id || "" } } });
+  overlay.applyAppearance();
+  refreshTrayMenu();
+  pushStatus();
+  if (id) {
+    overlay.setMood("happy");
+    setTimeout(() => {
+      if (!agent?.busy) overlay.setMood("idle");
+    }, 1500);
+  }
+  return id || "";
+}
+
+function cosmeticMenu() {
+  return {
+    label: "What he wears",
+    submenu: ["", ...WARDROBE.ORDER].map((id) => ({
+      label: WARDROBE.LABELS[id] || id || "nothing",
+      type: "radio",
+      checked: currentCosmeticId() === id,
+      click: () => wearCosmetic(id),
+    })),
+  };
+>>>>>>> 28c608d (0.1)
 }
 
 /* ---------------- tray + shortcuts ---------------- */
@@ -216,6 +282,10 @@ function refreshTrayMenu() {
       checked: overlay.visible,
       click: () => overlay.toggleVisible(),
     },
+<<<<<<< HEAD
+=======
+    cosmeticMenu(),
+>>>>>>> 28c608d (0.1)
     { label: "Reset buddy position", click: () => overlay.resetPosition() },
     { type: "separator" },
     { label: "Quit Bobby", click: () => app.quit() },
@@ -247,6 +317,20 @@ function toggleTools() {
   return next;
 }
 
+<<<<<<< HEAD
+=======
+/** A poke: one quip, one happy bounce, then back to idle. */
+function pokeBuddy() {
+  const q = overlay.quip();
+  overlay.bubble(q, {});
+  overlay.setMood("happy");
+  setTimeout(() => {
+    if (!agent?.busy) overlay.setMood("idle");
+  }, 1600);
+  return q;
+}
+
+>>>>>>> 28c608d (0.1)
 function applyAutostart(enabled) {
   try {
     app.setLoginItemSettings({ openAtLogin: !!enabled, openAsHidden: true });
@@ -499,6 +583,7 @@ function wireIpc() {
   });
   ipcMain.handle("chat:history", () => agent.view());
 
+<<<<<<< HEAD
   ipcMain.handle("buddy:poke", () => {
     const q = overlay.quip();
     overlay.bubble(q, {});
@@ -508,6 +593,9 @@ function wireIpc() {
     }, 1600);
     return q;
   });
+=======
+  ipcMain.handle("buddy:poke", () => pokeBuddy());
+>>>>>>> 28c608d (0.1)
   ipcMain.handle("buddy:wake", () => {
     overlay.wake();
     return overlay.mood;
@@ -559,6 +647,10 @@ function wireIpc() {
         checked: cfg.placement?.mode === "top",
         click: () => (cfg.placement?.mode === "top" ? overlay.undock() : overlay.dockToTop()),
       },
+<<<<<<< HEAD
+=======
+      cosmeticMenu(),
+>>>>>>> 28c608d (0.1)
       { label: "Reset position", click: () => overlay.resetPosition() },
       { type: "separator" },
       { label: "Quit", click: () => app.quit() },
@@ -571,6 +663,15 @@ function wireIpc() {
 
   ipcMain.handle("settings:get", () => publicSettings());
 
+<<<<<<< HEAD
+=======
+  // Try a cosmetic on without saving it — the settings picker's live preview.
+  ipcMain.handle("appearance:preview", (_e, { cosmetic } = {}) => {
+    overlay.previewCosmetic(cosmetic);
+    return true;
+  });
+
+>>>>>>> 28c608d (0.1)
   ipcMain.handle("settings:save", (_e, patch) => {
     const clean = { ...patch };
     if ("apiKey" in clean) {
@@ -688,6 +789,112 @@ function wireIpc() {
         overlay.consentWin.isVisible()
       ),
     }));
+<<<<<<< HEAD
+=======
+    // Change what he looks like, put him to sleep, make him say things — the
+    // live-testing entry point that scripts/trigger.js drives over CDP:
+    //   window.bobby.invoke("dev:trigger", [{ t: "look", color: "#E4A24C" }, …])
+    // Look changes go through config.json exactly like the settings window, so
+    // the first one is remembered and { t: "restore" } puts the old look back.
+    let devLook = null;
+    const rememberLook = () => {
+      if (!devLook) devLook = structuredClone(cfgmod.get().appearance);
+    };
+    const saveLook = () => {
+      overlay.applyAppearance();
+      refreshTrayMenu();
+      pushStatus();
+    };
+    // appearance.cosmetic is { id, cx, cy, scale } — but a bare id string can
+    // survive in the config (dev:shot used to write one), and spreading a
+    // string produces { 0: "s", 1: "t", … }. Normalise instead of trusting it.
+    const cosmeticPatch = (cur, id) => ({
+      cx: null,
+      cy: null,
+      scale: 1,
+      ...(cur && typeof cur === "object" && !Array.isArray(cur) ? cur : {}),
+      id,
+    });
+    ipcMain.handle("dev:trigger", (_e, actions) => {
+      const list = Array.isArray(actions) ? actions : [actions || {}];
+      const applied = [];
+      for (const a of list) {
+        switch (a.t) {
+          case "look": {
+            rememberLook();
+            const cur = cfgmod.get().appearance;
+            const next = { ...cur };
+            for (const k of ["color", "scale", "name", "sounds"]) {
+              if (a[k] !== undefined) next[k] = a[k];
+            }
+            if (a.cosmetic !== undefined) {
+              const id = a.cosmetic === "none" ? "" : String(a.cosmetic || "");
+              if (id && !WARDROBE.COSMETICS[id]) {
+                throw new Error(`unknown cosmetic "${id}" (have: ${WARDROBE.ORDER.join(", ")})`);
+              }
+              next.cosmetic = cosmeticPatch(cur.cosmetic, id);
+            }
+            cfgmod.update({ appearance: next });
+            saveLook();
+            applied.push("look");
+            break;
+          }
+          case "restore":
+            if (devLook) {
+              devLook = { ...devLook };
+              if (typeof devLook.cosmetic !== "object" || !devLook.cosmetic || Array.isArray(devLook.cosmetic)) {
+                devLook.cosmetic = cosmeticPatch(null, String(devLook.cosmetic || ""));
+              }
+              cfgmod.update({ appearance: devLook });
+              devLook = null;
+              saveLook();
+              applied.push("restore");
+            }
+            break;
+          case "mood": {
+            const m = String(a.mood || "idle");
+            overlay.setMood(m);
+            const ms = Number(a.ms) || 0;
+            if (ms > 0) {
+              setTimeout(() => {
+                if (overlay.mood === m && !agent?.busy) overlay.setMood("idle");
+              }, ms);
+            }
+            applied.push("mood:" + m);
+            break;
+          }
+          case "wake":
+            applied.push(overlay.wake() ? "wake" : "wake:he was awake");
+            break;
+          case "nap": {
+            // Arm the real nap clock with a test-sized delay: quiet for that
+            // long and he dozes off through the path a left-alone bean takes.
+            const ms = Number(a.ms);
+            overlay.napAfterMs = Number.isFinite(ms) && ms > 0 ? ms : null;
+            overlay.touch();
+            applied.push(overlay.napAfterMs ? `nap:${overlay.napAfterMs}ms` : "nap:default");
+            break;
+          }
+          case "poke":
+            applied.push("poke:" + pokeBuddy());
+            break;
+          case "bubble":
+            overlay.bubble(String(a.text || ""), {});
+            applied.push("bubble");
+            break;
+          default:
+            throw new Error(`unknown trigger "${a.t}"`);
+        }
+      }
+      // An empty list is a read-only state fetch (scripts/trigger.js info).
+      return {
+        applied,
+        mood: overlay.mood,
+        napAfterMs: overlay.napAfterMs,
+        appearance: cfgmod.get().appearance,
+      };
+    });
+>>>>>>> 28c608d (0.1)
     // Screenshot the buddy (or bubble/chat) for design review. `mood`, `scale`
     // and `cosmetic` temporarily override appearance so one run can capture a
     // whole contact sheet.
@@ -705,7 +912,16 @@ function wireIpc() {
         restoreAppearance = structuredClone(cur);
         const next = { ...cur };
         if (scale != null) next.scale = scale;
+<<<<<<< HEAD
         if (cosmetic != null) next.cosmetic = cosmetic;
+=======
+        if (cosmetic != null) {
+          next.cosmetic =
+            typeof cosmetic === "string"
+              ? { id: cosmetic === "none" ? "" : cosmetic, cx: null, cy: null, scale: 1 }
+              : cosmetic;
+        }
+>>>>>>> 28c608d (0.1)
         cfgmod.update({ appearance: next });
         overlay.applyAppearance();
         applied.push("appearance");

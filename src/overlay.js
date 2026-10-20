@@ -76,6 +76,12 @@ class Overlay {
     this.bubbleSticky = false;
     this.saveTimer = null;
     this.idleTimer = null;
+<<<<<<< HEAD
+=======
+    // Quiet time before a nap. A test can shorten it (scripts/trigger.js) and
+    // set it back to null; touch() falls back to NAP_AFTER_MS.
+    this.napAfterMs = null;
+>>>>>>> 28c608d (0.1)
     this.peek = {
       enabled: false,
       revealed: false,
@@ -316,6 +322,18 @@ class Overlay {
     this.buddy.webContents.send("buddy:cosmetic", { cosmetic: c });
   }
 
+<<<<<<< HEAD
+=======
+  /** Show a cosmetic that hasn't been saved yet (settings live preview). */
+  previewCosmetic(cosmetic) {
+    if (!this.buddy || this.buddy.isDestroyed()) return;
+    this.buddy.webContents.send("buddy:cosmetic", { cosmetic: cosmetic || null });
+    // Bring him out so you can actually see what you just picked.
+    if (this.peek.enabled) this.setRevealed(true);
+    this.touch();
+  }
+
+>>>>>>> 28c608d (0.1)
   /** The bean's actual box inside the window (CSS px, unscaled). */
   ballBox(size) {
     const s = size?.s || this.size().s;
@@ -465,6 +483,14 @@ class Overlay {
     // In peek mode the window's y is ours, not the user's — never persist it.
     if (!this.buddy || !this.cfg || this.peek.enabled) return;
     const bounds = this.buddy.getBounds();
+<<<<<<< HEAD
+=======
+    // "move" also fires for moves that are not the user's: his first placement
+    // at boot, and the compositor re-mapping the window on Wayland. Before he
+    // has ever been shown those bounds are (0,0), and saving them strands him in
+    // the corner — so only trust a window we can actually see.
+    if (!this.buddy.isVisible() || bounds.width < 40 || bounds.height < 40) return;
+>>>>>>> 28c608d (0.1)
     const display = screen.getDisplayMatching(bounds);
     const size = this.size();
     const spot = this.defaultSpot(display, size);
@@ -496,6 +522,12 @@ class Overlay {
   /** Tuck him up against the top edge, centred, in peek mode. */
   dockToTop() {
     const p = this.cfg.get().placement || {};
+<<<<<<< HEAD
+=======
+    // Suppress the reveal-on-bubble for our own confirmation, or he slides
+    // straight back out and nothing is parked.
+    this.peek.suppressReveal = true;
+>>>>>>> 28c608d (0.1)
     this.cfg.update({
       placement: { mode: "top", displayId: p.displayId || null, x: null, y: null },
     });
@@ -507,13 +539,31 @@ class Overlay {
     this.watch();
     this.applyPosition();
     this.movePeek({ force: true });
+<<<<<<< HEAD
     this.bubble("peeking from up here now.", {});
+=======
+    this.bubble("peeking from up here now.");
+    this.peek.suppressReveal = false;
+>>>>>>> 28c608d (0.1)
   }
 
   /** Let him sit wherever he is, normally. */
   undock() {
     if (!this.peek.enabled) return;
     const b = this.buddy.getBounds();
+<<<<<<< HEAD
+=======
+    // Same trap as savePosition: undocking a window that was never placed would
+    // persist (0,0). Send him home instead of stranding him in the corner.
+    if (!this.buddy.isVisible() || b.width < 40 || b.height < 40) {
+      this.cfg.update({ placement: { mode: "notch", displayId: null, x: null, y: null } });
+      this.peek.revealed = false;
+      this.peek.enabled = false;
+      this.stopWatching();
+      this.applyPosition();
+      return;
+    }
+>>>>>>> 28c608d (0.1)
     this.cfg.update({ placement: { mode: "custom", displayId: null, x: b.x, y: b.y } });
     this.peek.revealed = true;
     this.peek.enabled = false;
@@ -588,6 +638,12 @@ class Overlay {
     const win = this.ensureBubble();
     clearTimeout(this.bubbleTimer);
     this.bubbleSticky = sticky;
+<<<<<<< HEAD
+=======
+    // Never let a bubble hang in mid-air: if he's tucked up at the top edge,
+    // slide him out so the tail has something to point at.
+    if (this.peek.enabled && !this.peek.suppressReveal) this.setRevealed(true);
+>>>>>>> 28c608d (0.1)
     const send = () => {
       if (win.isDestroyed()) return;
       win.webContents.send("bubble:show", { text, typing, name: this.cfg.get().appearance.name });
@@ -641,7 +697,11 @@ class Overlay {
     if (!this.visible) return;
     this.idleTimer = setTimeout(() => {
       if (this.mood === "idle" && !this.consent) this.setMood("sleeping");
+<<<<<<< HEAD
     }, NAP_AFTER_MS);
+=======
+    }, this.napAfterMs || NAP_AFTER_MS);
+>>>>>>> 28c608d (0.1)
   }
 
   wake() {

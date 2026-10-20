@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A cute little ball that lives at the top of your screen, with an LLM brain and hands on your device.",
   "main": "src/main.js",
+<<<<<<< HEAD
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/gen-icon.js"
@@ -13,5 +14,63 @@
   },
   "allowScripts": {
     "electron@33.4.11": true
+=======
+  "author": {
+    "name": "Ferdinand B",
+    "email": "ferdinandbodmann@gmail.com"
+  },
+  "license": "MIT",
+  "desktopName": "bobby.desktop",
+  "scripts": {
+    "start": "electron .",
+    "icons": "node scripts/gen-icon.js",
+    "dist": "electron-builder --linux",
+    "dist:appimage": "electron-builder --linux AppImage",
+    "dist:deb": "electron-builder --linux deb"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  },
+  "build": {
+    "appId": "io.cobblestone.bobby",
+    "productName": "Bobby",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/icon-*.png",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "icon": "assets/icon-512.png",
+      "syncDesktopName": true,
+      "synopsis": "A tiny bean buddy for the top of your screen",
+      "description": "Bobby is a small always-on-top bean who lives at the top edge of your screen. Bring your own AI key, give him tools and internet access, and decide exactly what he is allowed to do."
+    },
+    "appImage": {
+      "artifactName": "Bobby-${version}-${arch}.AppImage"
+    },
+    "deb": {
+      "artifactName": "bobby_${version}_${arch}.deb",
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils"
+      ]
+    }
+>>>>>>> 28c608d (0.1)
   }
 }

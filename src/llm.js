@@ -227,10 +227,117 @@ async function anthropicChat({ baseUrl, model, apiKey, messages, tools, signal, 
   return { text, toolCalls };
 }
 
+<<<<<<< HEAD
 /* ---------------- public API ---------------- */
 
 async function streamChat(opts) {
   const f = opts.kind === "anthropic" ? anthropicChat : openaiChat;
+=======
+/* ---------------- Perplexity Agent API (OpenAI Responses format) ---------------- */
+
+function toResponsesInput(messages) {
+  const input = [];
+  for (const m of messages) {
+    if (m.role === "system") continue;
+    if (m.role === "tool") {
+      input.push({ type: "function_call_output", call_id: m.toolCallId, output: m.content || "" });
+    } else if (m.role === "assistant") {
+      if (m.content) input.push({ role: "assistant", content: [{ type: "output_text", text: m.content }] });
+      for (const tc of m.toolCalls || []) {
+        input.push({ type: "function_call", call_id: tc.id, name: tc.name, arguments: tc.arguments || "{}" });
+      }
+    } else {
+      input.push({ role: "user", content: [{ type: "input_text", text: m.content || "" }] });
+    }
+  }
+  return input;
+}
+
+function toResponsesTools(tools) {
+  return (tools || [])
+    .filter((t) => t?.function?.name)
+    .map((t) => ({
+      type: "function",
+      name: t.function.name,
+      description: t.function.description,
+      parameters: t.function.parameters,
+    }));
+}
+
+async function responsesChat({ baseUrl, model, apiKey, messages, tools, signal, onText, stream = true }) {
+  const instructions = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+  const body = {
+    model,
+    input: toResponsesInput(messages),
+    stream,
+    temperature: 0.6,
+    max_output_tokens: 4096,
+  };
+  if (instructions) body.instructions = instructions;
+  const fnTools = toResponsesTools(tools);
+  if (fnTools.length) {
+    body.tools = fnTools;
+    body.max_steps = 5; // without a preset the Agent API defaults to 1 step
+  }
+
+  const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/v1/responses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) throw await httpError(res);
+
+  if (!stream) {
+    const j = await res.json();
+    let text = "";
+    const toolCalls = [];
+    for (const item of j.output || []) {
+      if (item.type === "message") {
+        for (const c of item.content || []) if (c.type === "output_text") text += c.text || "";
+      } else if (item.type === "function_call") {
+        toolCalls.push({ id: item.call_id || item.id, name: item.name, arguments: item.arguments || "{}" });
+      }
+    }
+    return { text, toolCalls };
+  }
+
+  let text = "";
+  const calls = [];
+  const byItemId = {};
+  for await (const data of sseData(res)) {
+    let j;
+    try { j = JSON.parse(data); } catch { continue; }
+    if (j.type === "response.output_text.delta") {
+      const d = j.delta || "";
+      text += d;
+      if (d) onText?.(d);
+    } else if (j.type === "response.output_item.added" && j.item?.type === "function_call") {
+      const slot = { id: j.item.call_id || j.item.id, name: j.item.name || "", arguments: j.item.arguments || "" };
+      byItemId[j.item.id] = slot;
+      calls.push(slot);
+    } else if (j.type === "response.function_call_arguments.delta") {
+      const slot = byItemId[j.item_id];
+      if (slot) slot.arguments += j.delta || "";
+    } else if (j.type === "response.output_item.done" && j.item?.type === "function_call") {
+      const slot = byItemId[j.item.id];
+      if (slot) {
+        if (j.item.name) slot.name = j.item.name;
+        if (j.item.arguments) slot.arguments = j.item.arguments;
+      }
+    } else if (j.type === "response.failed" || j.type === "error") {
+      throw new LLMError(j.response?.error?.message || j.error?.message || j.message || "Perplexity stream error", 500);
+    }
+  }
+  return { text, toolCalls: calls.filter((c) => c && c.name) };
+}
+
+/* ---------------- public API ---------------- */
+
+async function streamChat(opts) {
+  const f =
+    opts.kind === "anthropic" ? anthropicChat : opts.kind === "responses" ? responsesChat : openaiChat;
+>>>>>>> 28c608d (0.1)
   return f(opts);
 }
 

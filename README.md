@@ -35,6 +35,11 @@ src/
   permissions.js the consent gate — approve once / always / deny, audit log
   config.js      settings, API key storage, audit + notes files
   preload.js     the only bridge between windows and main
+<<<<<<< HEAD
+=======
+  shared/
+    cosmetics.js the wardrobe: every cosmetic's SVG and where it sits on the bean
+>>>>>>> 28c608d (0.1)
   renderer/
     buddy/       the bean itself: shape, moods, blink, eye tracking, sounds
     bubble/      speech bubble (separate always-click-through window)
@@ -43,6 +48,10 @@ src/
     consent/     the little "Bobby needs your ok" card
 scripts/
   cdp.js         drive the running app over the DevTools protocol (testing)
+<<<<<<< HEAD
+=======
+  trigger.js     poke a running instance: looks, moods, naps (testing)
+>>>>>>> 28c608d (0.1)
   gen-icon.js    regenerate app + tray icons from the artwork (pure Node)
 ```
 
@@ -63,6 +72,29 @@ Global shortcuts (also in the tray menu):
 | `Ctrl/Cmd+Alt+K` | kill switch — turn all tools off/on |
 | `Ctrl/Cmd+Alt+Space` | open the chat |
 
+<<<<<<< HEAD
+=======
+## Where he sits
+
+Drag him anywhere and he remembers, per monitor. If you'd rather he wasn't taking up
+room, turn on **Hide at the top of the screen** (right-click him, or the tray menu):
+he parks at the top-middle of the display so only a sliver of his head shows, and
+slides down when your mouse reaches that edge. Anything you do — a bubble, a
+question, a cosmetic change — brings him out too. Drag him down and he stays put.
+
+## Looks
+
+His colour, size and wardrobe are in **Settings → Look**. Click a card and he tries it
+on immediately (he'll slide down to show you); nothing is kept until you press
+**Save**. The same list lives in his right-click menu and the tray, under *What he
+wears* — that's the one-click way to change it.
+
+The wardrobe is `src/shared/cosmetics.js`. Each cosmetic is a small inline SVG pinned
+to the bean by fractions of his own box — `cx`/`cy` (0.5, 0.13 = top-middle) at a
+`size` that's a fraction of his height — so it scales and stays put at every size,
+mood and colour. One decoration at a time, and the default is nothing.
+
+>>>>>>> 28c608d (0.1)
 ## Providers
 
 - **Ollama (local)** — `http://localhost:11434/v1`, no key needed. `qwen2.5:0.5b` and
@@ -125,6 +157,14 @@ elsewhere. Screenshot/screen-reading is deliberately not in v1.
   notes.md      Bobby's own memory
 ```
 
+<<<<<<< HEAD
+=======
+`main.js` pins this path explicitly (`app.setPath("userData", …)`) rather than letting
+Electron derive it from the app name. Packaging renames the app, and without the pin a
+packaged build would come up as a blank first-run profile with your provider, key, chat
+and reminders all missing.
+
+>>>>>>> 28c608d (0.1)
 `PROMPT.md` is the original build brief; this README describes what actually got built.
 
 ## Regenerating the icons
@@ -137,6 +177,59 @@ npm run icons
 palette `#9797B4` → `#726FCF` → `#4C47EA`, eyes at 42% black) into `assets/icon-*.png` with no image
 libraries — just zlib.
 
+<<<<<<< HEAD
+=======
+## Building an app you can double-click
+
+```bash
+npm install          # once, to get electron-builder
+npm run dist         # AppImage + .deb into dist/
+```
+
+| script | what you get |
+| --- | --- |
+| `npm run dist` | both targets below |
+| `npm run dist:appimage` | `dist/Bobby-0.1.0-x86_64.AppImage` — one file, no install. `chmod +x` it and double-click, or drop it in `~/.local/bin`. |
+| `npm run dist:deb` | `dist/bobby_0.1.0_amd64.deb` — installs a menu entry and icon system-wide (`sudo dpkg -i` or your software centre). |
+
+The AppImage needs FUSE. On distros that dropped `libfuse2` (Ubuntu 24.04 and friends)
+either install it, or run the AppImage with `--appimage-extract-and-run`. The `.deb` has
+no such dependency, which is also why it's probably the nicer option if you want him in
+your application menu.
+
+Packaged and unpackaged builds share the same `~/.config/notch-buddy` config, so a
+settings change made in one shows up in the other. That also means only one of them can
+run at a time — Electron's single-instance lock makes the second one hand over to the
+first and exit rather than starting a second Bobby.
+
+### If you have AppImageLauncher
+
+On a machine with AppImageLauncher installed (this one), double-clicking the AppImage
+does not run it in place: the launcher *moves* it to `~/Applications/` under a
+content-ish name, adds an application-menu entry for it, and runs the copy. After that
+the menu entry is how you launch him — you can delete `dist/` and he'll still be there.
+
+Two things that follow from that, both worth knowing:
+
+- The AppImage is no longer in `dist/` once you've double-clicked it. Rebuild, or copy
+  the new one to `~/Applications/` under the same name, to update the menu entry.
+- The launcher relaunches the copy with its own environment, so anything you passed on
+  the command line (including an isolated profile, below) is not carried over.
+
+### Testing against a throwaway profile
+
+Setting `BOBBY_USER_DATA` keeps a run away from your real settings, chat log and
+reminders — handy for trying something without risking the buddy you actually use:
+
+```bash
+BOBBY_USER_DATA=/tmp/bobby-test npm start
+BOBBY_USER_DATA=/tmp/bobby-test ./dist/Bobby-0.1.0-x86_64.AppImage
+```
+
+An explicitly requested profile also gets its own single-instance lock, so a test
+instance can run alongside the real one.
+
+>>>>>>> 28c608d (0.1)
 ## Developing / testing the running app
 
 ```bash
@@ -147,7 +240,34 @@ node scripts/cdp.js buddy --shot /tmp/bobby.png  # screenshots of the overlay
 ```
 
 `BOBBY_DEBUG` adds dev-only IPC: `dev:runTool` (run a tool through the real consent gate),
+<<<<<<< HEAD
 `dev:setTools`, `dev:info` (window bounds, data paths).
+=======
+`dev:setTools`, `dev:info` (window bounds, data paths), `dev:trigger` (looks, moods, naps).
+
+### Poking his looks, moods and naps from the shell
+
+`scripts/trigger.js` drives a running instance over that same port — the quick way to
+watch a mood, a cosmetic or a nap behave without digging through the settings UI:
+
+```bash
+node scripts/trigger.js sleep                 # doze off right now
+node scripts/trigger.js wake                  # wake him + restart the nap clock
+node scripts/trigger.js nap 5                 # stay quiet: he naps on his own after 5s
+node scripts/trigger.js mood happy --for 3000 # bounce, back to idle after 3s
+node scripts/trigger.js color '#E0708F' cosmetic bow scale 1.4
+node scripts/trigger.js poke bubble "hi!"     # chained — commands run left to right
+node scripts/trigger.js restore               # put the look back the way it was
+node scripts/trigger.js info                  # mood, look, window bounds, data dir
+```
+
+Moods, pokes and bubbles are instant and leave no trace. Colour, scale, cosmetic, name and
+sounds go through `config.json` exactly as the settings window would — the first look change
+of a run is remembered, so `restore` puts your old look back (or fix it in Settings → Look).
+`nap <seconds>` shortens his real nap clock so you can watch him doze off through the genuine
+"left alone" path (he has to be visible and idle); `nap off` puts the five-minute delay back.
+Run `node scripts/trigger.js --help` for everything, with examples.
+>>>>>>> 28c608d (0.1)
 
 ### Troubleshooting
 

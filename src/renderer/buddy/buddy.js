@@ -172,6 +172,7 @@ window.buddyInfo = function buddyInfo() {
 };
 
 /* ---------------- cosmetics ----------------
+<<<<<<< HEAD
    One little decoration worn on the bean. Each entry is plain SVG so it stays
    crisp at any size, and `size` is a fraction of the bean's height. */
 
@@ -234,6 +235,14 @@ const COSMETICS = {
       "</svg>",
   },
 };
+=======
+   One little decoration worn on the bean. The wardrobe itself lives in
+   src/shared/cosmetics.js (loaded before this file) so the settings preview and
+   the tray menus describe exactly the same thing. Each entry is plain SVG, and
+   `size` is a fraction of the bean's height. */
+
+const COSMETICS = (window.BOBBY_COSMETICS && window.BOBBY_COSMETICS.COSMETICS) || {};
+>>>>>>> 28c608d (0.1)
 
 function paintCosmetic() {
   const c = state.cosmetic || {};
@@ -247,8 +256,13 @@ function paintCosmetic() {
   const px = Math.round(110 * def.size * (Number(c.scale) || 1));
   cosmeticEl.style.width = px + "px";
   cosmeticEl.style.height = px + "px";
+<<<<<<< HEAD
   cosmeticEl.style.left = Math.round(156 * (c.cx ?? 0.5)) + "px";
   cosmeticEl.style.top = Math.round(110 * (c.cy ?? 0.8)) + "px";
+=======
+  cosmeticEl.style.left = Math.round(156 * (c.cx ?? def.cx ?? 0.5)) + "px";
+  cosmeticEl.style.top = Math.round(110 * (c.cy ?? def.cy ?? 0.8)) + "px";
+>>>>>>> 28c608d (0.1)
   cosmeticEl.innerHTML = def.svg;
   cosmeticEl.classList.add("on");
 }
@@ -388,10 +402,13 @@ window.bobby.on("buddy:state", (s) => {
     state.cosmetic = s.cosmetic && typeof s.cosmetic === "object" ? s.cosmetic : null;
     paintCosmetic();
   }
+<<<<<<< HEAD
   if (s.cosmetic !== undefined) {
     state.cosmetic = s.cosmetic && typeof s.cosmetic === "object" ? s.cosmetic : null;
     paintCosmetic();
   }
+=======
+>>>>>>> 28c608d (0.1)
   if (s.name) {
     ball.title = `${s.name} — drag to move, click to poke, double-click to chat`;
     document.title = s.name;

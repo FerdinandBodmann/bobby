@@ -119,11 +119,19 @@ const PROVIDERS = {
   },
   perplexity: {
     label: "Perplexity",
+<<<<<<< HEAD
     kind: "openai",
     baseUrl: "https://api.perplexity.ai",
     model: "sonar",
     needsKey: true,
     hint: "Answers with live web sources — perplexity.ai/settings/api.",
+=======
+    kind: "responses",
+    baseUrl: "https://api.perplexity.ai",
+    model: "perplexity/sonar",
+    needsKey: true,
+    hint: "Agent API with live web sources — perplexity.ai/settings/api.",
+>>>>>>> 28c608d (0.1)
   },
 
   /* --- escape hatches --- */
@@ -162,9 +170,16 @@ const DEFAULTS = {
     color: "#726FCF",
     scale: 1,
     sounds: true,
+<<<<<<< HEAD
     // A single cosmetic slot on the bean: id + position, understood by the
     // renderer. Leave the id empty for a plain bean.
     cosmetic: { id: "", cx: 0.5, cy: 0.8, scale: 1 },
+=======
+    // A single cosmetic slot on the bean: id + optional position overrides.
+    // Leave the id empty for a plain bean; leave cx/cy null to use the
+    // cosmetic's own default spot.
+    cosmetic: { id: "", cx: null, cy: null, scale: 1 },
+>>>>>>> 28c608d (0.1)
   },
   placement: {
     mode: "notch", // notch | custom | top
